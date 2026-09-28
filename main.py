@@ -11,6 +11,7 @@ import time
 from datetime import datetime
 from sentiment_analyzer import SentimentAnalyzer
 from alert_system import AlertSystem
+from visual_state import update_visual_state
 
 # Telegram credentials must be provided through environment variables.
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -41,6 +42,9 @@ def print_sentiment_display(result):
     print("\n" + "="*70)
     print(f"{emoji} SENTIMENT: {sentiment} {emoji}")
     print(f"Score: {total_score:+d}/{max_score} | Changed: {changed}")
+    visual = result.get('visual_state')
+    if visual:
+        print(f"Visual: {visual['regime'].upper()} | 4-hour slot: {visual['slot_utc']} | Updated: {visual['updated_now']}")
     print("="*70)
     
     # EARLY REVERSAL INDICATORS
@@ -92,6 +96,7 @@ def run_once(analyzer, alert_system):
     """Run one analysis cycle and exit, suitable for an external scheduler."""
     analyzer.current_sentiment = _load_previous_sentiment()
     result = analyzer.analyze_sentiment()
+    result['visual_state'] = update_visual_state(result)
     print_sentiment_display(result)
 
     if result.get('signal') and result.get('changed'):
