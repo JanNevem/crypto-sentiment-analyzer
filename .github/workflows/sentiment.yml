@@ -58,7 +58,11 @@ jobs:
         
         with:
         
-          path: sentiment_state.json
+          path: |
+        
+            sentiment_state.json
+        
+            visual_state.json
           
           key: sentiment-state-${{ github.run_id }}
           
@@ -88,7 +92,11 @@ jobs:
         
         with:
         
-          path: sentiment_state.json
+          path: |
+        
+            sentiment_state.json
+        
+            visual_state.json
           
           key: sentiment-state-${{ github.run_id }}
           
