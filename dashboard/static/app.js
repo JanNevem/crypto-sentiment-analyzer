@@ -33,7 +33,7 @@
     const value = String(sentiment || "CONSOLIDATION");
     if (value.includes("BULLISH")) return "rgba(99,223,161,.24)";
     if (value.includes("BEARISH")) return "rgba(255,126,129,.24)";
-    if (value === "UNRECORDED") return "rgba(154,173,184,.08)";
+    if (value === "UNRECORDED") return "rgba(106,119,130,.18)";
     return "rgba(255,180,84,.24)";
   };
 
@@ -64,12 +64,14 @@
     table.innerHTML = history.slice().reverse().map((point) => `<tr><td>${escapeHtml(dateText(point.timestamp))}</td><td>${escapeHtml(signed(point.score))} / ${escapeHtml(point.max_score)}</td><td>${escapeHtml(point.sentiment)}</td></tr>`).join("");
     const ready = Array.isArray(candles) && candles.length > 0;
     $("#candle-empty").hidden = ready;
-    $("#chart-summary").textContent = ready ? `${candles.length} closed 4H candles. Background bands show the persisted sentiment regime for each slot; the chart is read-only.` : "Closed 4H candle data is temporarily unavailable.";
+    const closedCount = candles.filter((candle) => candle.closed !== false).length;
+    const activeCount = candles.length - closedCount;
+    $("#chart-summary").textContent = ready ? `${closedCount} closed 4H candles${activeCount ? ` + ${activeCount} current formation` : ""}. Amber, green, and red bands are recorded sentiment; slate bands are unrecorded slots.` : "Closed 4H candle data is temporarily unavailable.";
     if (typeof Chart === "undefined" || !ready) return;
     if (candleChart) candleChart.destroy();
     candleChart = new Chart($("#candle-chart"), {
       type: "candlestick",
-      data: { datasets: [{ label: "BTCUSDT / 4H", data: candles, backgroundColors: { up: "#000000", down: "#000000", unchanged: "#000000" }, borderColors: { up: "#000000", down: "#000000", unchanged: "#000000" }, barThickness: 3 }] },
+      data: { datasets: [{ label: "BTCUSDT / 4H", data: candles, backgroundColors: { up: "#2b3138", down: "#2b3138", unchanged: "#2b3138" }, borderColors: { up: "#2b3138", down: "#2b3138", unchanged: "#2b3138" }, barThickness: 3 }] },
       plugins: [sentimentBandsPlugin],
       options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "none" }, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { type: "time", time: { unit: "day", displayFormats: { day: "MMM d" } }, ticks: { color: "#9aadb8", maxTicksLimit: 10 }, grid: { color: "rgba(45,65,79,.45)" } }, y: { ticks: { color: "#9aadb8", callback: (value) => `$${Number(value).toLocaleString()}` }, grid: { color: "rgba(45,65,79,.45)" } } } }
     });

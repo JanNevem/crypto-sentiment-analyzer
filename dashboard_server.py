@@ -18,6 +18,7 @@ SIGNAL_HISTORY_FILE = Path(os.getenv("SIGNAL_HISTORY_FILE", str(BASE_DIR / "sign
 
 app = Flask(__name__, template_folder="dashboard/templates", static_folder="dashboard/static")
 BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
+CANDLE_CACHE: list[dict[str, Any]] = []
 
 
 def _read_json(path: Path, fallback: Any) -> Any:
@@ -139,24 +140,28 @@ def _sentiment_for_slot(slot: str | None, history: list[dict[str, Any]], latest:
         exact = next((point for point in history if point.get("slot_utc") == slot), None)
         if exact and exact.get("sentiment"):
             return str(exact["sentiment"])
-    if latest and latest.get("sentiment"):
+    if latest and latest.get("slot_utc") == slot and latest.get("sentiment"):
         return str(latest["sentiment"])
-    return "CONSOLIDATION"
+    return "UNRECORDED"
 
 
 def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
     """Fetch closed BTCUSDT 4H candles for a read-only confirmation view."""
     query = urlencode({"symbol": "BTCUSDT", "interval": "4h", "limit": 180})
     request = Request(f"{BINANCE_KLINES_URL}?{query}", headers={"User-Agent": "BTC-Sentiment-Dashboard/1.0"})
+    global CANDLE_CACHE
     try:
         with urlopen(request, timeout=8) as response:
             raw = json.loads(response.read().decode("utf-8"))
     except (OSError, ValueError, TypeError):
-        return []
+        return [
+            {**candle, "sentiment": _sentiment_for_slot(candle.get("slot_utc"), history, latest)}
+            for candle in CANDLE_CACHE
+        ]
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     candles = []
     for row in raw if isinstance(raw, list) else []:
-        if not isinstance(row, list) or len(row) < 7 or _decimal(row[6]) > now_ms:
+        if not isinstance(row, list) or len(row) < 7:
             continue
         slot = _slot_from_ms(row[0])
         try:
@@ -169,10 +174,16 @@ def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | N
                 "volume": _decimal(row[7]) if len(row) > 7 else 0,
                 "slot_utc": slot,
                 "sentiment": _sentiment_for_slot(slot, history, latest),
+                "closed": _decimal(row[6]) <= now_ms,
             })
         except (TypeError, ValueError):
             continue
-    return candles
+    if candles:
+        CANDLE_CACHE = candles
+    return candles or [
+        {**candle, "sentiment": _sentiment_for_slot(candle.get("slot_utc"), history, latest)}
+        for candle in CANDLE_CACHE
+    ]
 
 
 def dashboard_payload() -> dict[str, Any]:
