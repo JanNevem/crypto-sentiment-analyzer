@@ -86,16 +86,55 @@ def _load_previous_sentiment():
         return None
 
 
-def _save_sentiment(result):
+def _load_sentiment_state():
+    """Load stable and pending sentiment state for transition confirmation."""
+    try:
+        with open(STATE_FILE, 'r', encoding='utf-8') as handle:
+            state = json.load(handle)
+            return state if isinstance(state, dict) else {}
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}
+
+
+def _save_sentiment(result, pending_sentiment=None, pending_count=0):
     """Persist only the small amount of state required by the next run."""
     with open(STATE_FILE, 'w', encoding='utf-8') as handle:
-        json.dump({'sentiment': result['sentiment'], 'timestamp': result['timestamp']}, handle)
+        json.dump({
+            'sentiment': result['sentiment'],
+            'timestamp': result['timestamp'],
+            'pending_sentiment': pending_sentiment,
+            'pending_count': pending_count,
+        }, handle)
+
+
+def _apply_transition_stability(result, previous_state):
+    """Keep displayed sentiment stable until a candidate repeats twice."""
+    previous = previous_state.get('sentiment')
+    candidate = result['sentiment']
+    pending = previous_state.get('pending_sentiment')
+    pending_count = int(previous_state.get('pending_count') or 0)
+    if not previous or candidate == previous:
+        return result, None, 0
+    if candidate == pending:
+        pending_count += 1
+    else:
+        pending_count = 1
+    result['candidate_sentiment'] = candidate
+    if pending_count < 2:
+        result['sentiment'] = previous
+        result['changed'] = False
+        result['signal'] = None
+        return result, candidate, pending_count
+    result['changed'] = True
+    return result, None, 0
 
 
 def run_once(analyzer, alert_system):
     """Run one analysis cycle and exit, suitable for an external scheduler."""
-    analyzer.current_sentiment = _load_previous_sentiment()
+    previous_state = _load_sentiment_state()
+    analyzer.current_sentiment = previous_state.get('sentiment')
     result = analyzer.analyze_sentiment()
+    result, pending_sentiment, pending_count = _apply_transition_stability(result, previous_state)
     result['visual_state'] = update_visual_state(result)
     print_sentiment_display(result)
 
@@ -106,7 +145,7 @@ def run_once(analyzer, alert_system):
             indicators=result['indicators']
         )
 
-    _save_sentiment(result)
+    _save_sentiment(result, pending_sentiment, pending_count)
     return result
 
 
@@ -124,8 +163,12 @@ def run_watch(analyzer, alert_system, interval):
             cycle += 1
             print(f"\n[CYCLE {cycle}] {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             
-            # Analyze sentiment
+            # Analyze sentiment and require two consecutive cycles for a
+            # transition in continuous mode as well as scheduled mode.
+            previous_state = _load_sentiment_state()
+            analyzer.current_sentiment = previous_state.get('sentiment')
             result = analyzer.analyze_sentiment()
+            result, pending_sentiment, pending_count = _apply_transition_stability(result, previous_state)
             
             # Display results
             print_sentiment_display(result)
@@ -137,6 +180,8 @@ def run_watch(analyzer, alert_system, interval):
                     previous_sentiment=result['previous_sentiment'],
                     indicators=result['indicators']
                 )
+
+            _save_sentiment(result, pending_sentiment, pending_count)
             
             # Wait for next interval
             print(f"\n⏳ Next update in {interval} seconds...")

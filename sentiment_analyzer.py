@@ -32,6 +32,7 @@ class SentimentAnalyzer:
         self.indicator_scores = {}
         self.early_reversal_scores = {}
         self.confirmatory_scores = {}
+        self.data_quality = {}
         
         # Initialize analyzers
         self.reversal_detector = ReversalDetector()
@@ -181,17 +182,63 @@ class SentimentAnalyzer:
             return 50, "Neutral"
     
     def get_trend_strength(self) -> Dict:
-        """[CONFIRM] Get trend strength meter"""
-        if len(self.price_history) < 3:
-            return {'strength': 5, 'direction': 'Neutral', 'description': 'Insufficient data'}
-        
-        rsi_value = 50
-        macd_line = self.macd_history[-1] if self.macd_history else 0
-        signal_line = 0
-        
-        return self.trend_analyzer.get_trend_strength(
-            self.price_history, rsi_value, macd_line, signal_line
-        )
+        """[CONFIRM] Combine ATR-normalized momentum with directional ADX."""
+        try:
+            response = requests.get(
+                "https://api.binance.com/api/v3/klines",
+                params={'symbol': 'BTCUSDT', 'interval': '1d', 'limit': 100},
+                timeout=5,
+            )
+            rows = response.json()
+            if len(rows) < 35:
+                return {'strength': 5, 'direction': 'Neutral', 'description': 'Insufficient data', 'quality': {'status': 'degraded', 'reason': 'insufficient daily candles'}}
+            highs = np.array([float(row[2]) for row in rows])
+            lows = np.array([float(row[3]) for row in rows])
+            closes = np.array([float(row[4]) for row in rows])
+            previous_closes = np.roll(closes, 1)
+            previous_closes[0] = closes[0]
+            true_range = np.maximum(highs - lows, np.maximum(abs(highs - previous_closes), abs(lows - previous_closes)))
+            atr = pd.Series(true_range).ewm(alpha=1 / 14, adjust=False).mean().to_numpy()
+            up_move = np.diff(highs, prepend=highs[0])
+            down_move = -np.diff(lows, prepend=lows[0])
+            plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
+            minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
+            plus_di = 100 * pd.Series(plus_dm).ewm(alpha=1 / 14, adjust=False).mean().to_numpy() / np.maximum(atr, 1e-9)
+            minus_di = 100 * pd.Series(minus_dm).ewm(alpha=1 / 14, adjust=False).mean().to_numpy() / np.maximum(atr, 1e-9)
+            dx = 100 * abs(plus_di - minus_di) / np.maximum(plus_di + minus_di, 1e-9)
+            adx = pd.Series(dx).ewm(alpha=1 / 14, adjust=False).mean().to_numpy()
+            current_atr = float(atr[-1])
+            momentum_5d_atr = ((closes[-1] - closes[-6]) / max(current_atr, 1e-9))
+            adx_value = float(adx[-1])
+            plus_value = float(plus_di[-1])
+            minus_value = float(minus_di[-1])
+            direction = 'Up' if plus_value > minus_value and momentum_5d_atr > 0 else 'Down' if minus_value > plus_value and momentum_5d_atr < 0 else 'Neutral'
+            strength = 5
+            if adx_value >= 25:
+                strength += 2 if direction != 'Neutral' else 0
+            elif adx_value >= 18 and direction != 'Neutral':
+                strength += 1
+            if abs(momentum_5d_atr) >= 2:
+                strength += 2 if direction != 'Neutral' else 0
+            elif abs(momentum_5d_atr) >= 1:
+                strength += 1 if direction != 'Neutral' else 0
+            if direction == 'Down':
+                strength = 10 - strength
+            strength = max(1, min(10, strength))
+            return {
+                'strength': strength,
+                'direction': direction,
+                'description': f'ADX {adx_value:.1f}; +DI {plus_value:.1f}; -DI {minus_value:.1f}; momentum {momentum_5d_atr:.2f} ATR',
+                'adx': round(adx_value, 2),
+                'plus_di': round(plus_value, 2),
+                'minus_di': round(minus_value, 2),
+                'atr': round(current_atr, 2),
+                'momentum_5d_atr': round(float(momentum_5d_atr), 2),
+                'quality': {'status': 'available', 'source': 'Binance BTCUSDT daily OHLCV', 'freshness': 'daily'}
+            }
+        except Exception as e:
+            print(f"Error calculating ATR/ADX trend: {e}")
+            return {'strength': 5, 'direction': 'Neutral', 'description': 'Trend data unavailable', 'quality': {'status': 'unavailable', 'reason': str(e)}}
     
     def get_volume_confirmation(self) -> Dict:
         """[CONFIRM] Get volume analysis"""
@@ -417,6 +464,21 @@ class SentimentAnalyzer:
         dollar = self.get_dollar_strength()
         dollar_score = dollar['score']
         print(f"      Dollar: {dollar['trend']} -> Score: {dollar_score:+d}")
+
+        self.data_quality = {
+            'rsi_divergence': {'status': 'available' if len(self.rsi_history) >= 40 else 'unavailable', 'source': 'Binance BTCUSDT daily OHLCV'},
+            'macd_momentum': {'status': 'available' if len(self.macd_history) >= 2 else 'unavailable', 'source': 'Binance BTCUSDT daily OHLCV'},
+            'whale_activity': {'status': 'unavailable' if 'unavailable' in str(whale.get('description', '')).lower() else 'available', 'source': 'No configured on-chain provider'},
+            'structure_break': {'status': 'available' if structure.get('structure') not in ('Error', 'Insufficient Data') else 'unavailable', 'source': 'Binance BTCUSDT 4H OHLCV'},
+            'fear_greed': {'status': 'available', 'source': 'Alternative.me'},
+            'trend_strength': trend.get('quality', {'status': 'available', 'source': 'Binance BTCUSDT daily OHLCV'}),
+            'volume_confirmation': {'status': 'available' if volume.get('current_volume', 0) else 'unavailable', 'role': 'context_only'},
+            'bollinger_bands': {'status': 'available', 'source': 'Binance BTCUSDT daily OHLCV'},
+            'volume_profile': {'status': 'available' if vol_profile.get('current_volume', 0) else 'unavailable', 'source': 'Binance BTCUSDT daily OHLCV'},
+            'open_interest': {'status': 'available' if oi_signal.get('trend') != 'Unavailable' else 'unavailable', 'source': 'Binance Futures + 4H price context'},
+            'funding_rate': {'status': 'available' if fr_signal.get('state') != 'Unavailable' else 'unavailable', 'source': 'Binance Futures'},
+            'dollar_strength': {'status': 'available' if dollar.get('available') else 'unavailable', 'source': dollar.get('source', 'FRED')},
+        }
         
         confirmatory_total = (fg_score + trend_score + volume_score + bb_score +
                             vol_profile_score + oi_score + fr_score + dollar_score)
@@ -492,6 +554,7 @@ class SentimentAnalyzer:
                 'open_interest': oi_signal,
                 'funding': fr_signal,
             },
+            'data_quality': self.data_quality,
             'changed': changed,
             'previous_sentiment': self.previous_sentiment,
             'timestamp': self.last_update.isoformat(),
