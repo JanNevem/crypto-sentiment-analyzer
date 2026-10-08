@@ -190,14 +190,18 @@ def _daily_regimes(candles: list[dict[str, Any]]) -> list[dict[str, Any]]:
         prior_ema20 = _ema(closes, 20, index - 1) if index else ema20
         momentum = closes[index] / closes[index - 20] - 1 if index >= 20 and closes[index - 20] else 0.0
         adx = _daily_adx(candles, index)
-        bullish = index >= 50 and closes[index] > ema20 > ema50 and ema20 > prior_ema20 and momentum >= 0.05 and adx is not None and adx >= 20
-        bearish = index >= 50 and closes[index] < ema20 < ema50 and ema20 < prior_ema20 and momentum <= -0.05 and adx is not None and adx >= 20
+        volumes = [_decimal(item.get("volume")) for item in candles]
+        average_volume = sum(volumes[index - 20:index]) / 20 if index >= 20 else 0.0
+        volume_ratio = volumes[index] / average_volume if average_volume else None
+        volume_confirmed = volume_ratio is not None and volume_ratio >= 1.0
+        bullish = index >= 50 and closes[index] > ema20 > ema50 and ema20 > prior_ema20 and momentum >= 0.05 and adx is not None and adx >= 20 and volume_confirmed
+        bearish = index >= 50 and closes[index] < ema20 < ema50 and ema20 < prior_ema20 and momentum <= -0.05 and adx is not None and adx >= 20 and volume_confirmed
         regime = "BULLISH" if bullish else "BEARISH" if bearish else "UNCERTAIN"
         regimes.append({
             **candle,
             "regime": regime,
             "regime_source": "DAILY_CONFIRMATION",
-            "confirmation": {"ema20": round(ema20, 2), "ema50": round(ema50, 2), "adx": round(adx, 2) if adx is not None else None, "momentum_20d_pct": round(momentum * 100, 2)},
+            "confirmation": {"ema20": round(ema20, 2), "ema50": round(ema50, 2), "adx": round(adx, 2) if adx is not None else None, "momentum_20d_pct": round(momentum * 100, 2), "volume_ratio": round(volume_ratio, 2) if volume_ratio is not None else None, "volume_confirmed": volume_confirmed},
         })
     return regimes
 

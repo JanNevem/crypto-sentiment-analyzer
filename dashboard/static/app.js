@@ -68,7 +68,7 @@
     const bullishCount = candles.filter((candle) => candle.regime === "BULLISH").length;
     const bearishCount = candles.filter((candle) => candle.regime === "BEARISH").length;
     const uncertainCount = candles.filter((candle) => candle.regime === "UNCERTAIN").length;
-    $("#chart-summary").textContent = ready ? `${closedCount} completed daily candles. Confirmed: ${bullishCount} bullish / ${bearishCount} bearish; ${uncertainCount} neutral or mixed. EMA20/50, ADX, and 20-day momentum must agree.` : "Completed daily candle data is temporarily unavailable.";
+    $("#chart-summary").textContent = ready ? `${closedCount} completed daily candles. Confirmed: ${bullishCount} bullish / ${bearishCount} bearish; ${uncertainCount} neutral or mixed. EMA20/50, ADX, 20-day momentum, and volume ≥ 20-day average must agree.` : "Completed daily candle data is temporarily unavailable.";
     if (typeof Chart === "undefined" || !ready) return;
     if (candleChart) candleChart.destroy();
     candleChart = new Chart($("#candle-chart"), {
