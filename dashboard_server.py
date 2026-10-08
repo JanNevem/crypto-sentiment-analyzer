@@ -145,6 +145,40 @@ def _sentiment_for_slot(slot: str | None, history: list[dict[str, Any]], latest:
     return "UNRECORDED"
 
 
+def _price_proxy_sentiment(candles: list[dict[str, Any]], index: int) -> str:
+    """Classify missing analyzer slots from trailing 24-hour price momentum."""
+    candle = candles[index]
+    close = _decimal(candle.get("c"))
+    open_price = _decimal(candle.get("o"))
+    lookback_index = max(0, index - 6)
+    anchor = _decimal(candles[lookback_index].get("c"))
+    momentum = (close / anchor - 1) if anchor else 0.0
+    if lookback_index == index and open_price:
+        momentum = close / open_price - 1
+    if momentum >= 0.02:
+        return "BULLISH"
+    if momentum <= -0.02:
+        return "BEARISH"
+    return "CONSOLIDATION"
+
+
+def _apply_candle_sentiment(candles: list[dict[str, Any]], history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Keep analyzer labels authoritative and fill only missing slots with a labeled proxy."""
+    labeled = []
+    for index, candle in enumerate(candles):
+        analyzer_sentiment = _sentiment_for_slot(candle.get("slot_utc"), history, latest)
+        if analyzer_sentiment == "UNRECORDED":
+            labeled.append({
+                **candle,
+                "sentiment": _price_proxy_sentiment(candles, index),
+                "sentiment_source": "PRICE_PROXY",
+                "proxy_window": "24H momentum",
+            })
+        else:
+            labeled.append({**candle, "sentiment": analyzer_sentiment, "sentiment_source": "ANALYZER"})
+    return labeled
+
+
 def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
     """Fetch closed BTCUSDT 4H candles for a read-only confirmation view."""
     query = urlencode({"symbol": "BTCUSDT", "interval": "4h", "limit": 180})
@@ -154,10 +188,7 @@ def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | N
         with urlopen(request, timeout=8) as response:
             raw = json.loads(response.read().decode("utf-8"))
     except (OSError, ValueError, TypeError):
-        return [
-            {**candle, "sentiment": _sentiment_for_slot(candle.get("slot_utc"), history, latest)}
-            for candle in CANDLE_CACHE
-        ]
+        return _apply_candle_sentiment(CANDLE_CACHE, history, latest)
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     candles = []
     for row in raw if isinstance(raw, list) else []:
@@ -173,17 +204,15 @@ def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | N
                 "c": _decimal(row[4]),
                 "volume": _decimal(row[7]) if len(row) > 7 else 0,
                 "slot_utc": slot,
-                "sentiment": _sentiment_for_slot(slot, history, latest),
+                "sentiment": "UNRECORDED",
                 "closed": _decimal(row[6]) <= now_ms,
             })
         except (TypeError, ValueError):
             continue
     if candles:
         CANDLE_CACHE = candles
-    return candles or [
-        {**candle, "sentiment": _sentiment_for_slot(candle.get("slot_utc"), history, latest)}
-        for candle in CANDLE_CACHE
-    ]
+        return _apply_candle_sentiment(candles, history, latest)
+    return _apply_candle_sentiment(CANDLE_CACHE, history, latest)
 
 
 def dashboard_payload() -> dict[str, Any]:
