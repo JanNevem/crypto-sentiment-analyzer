@@ -1,0 +1,20 @@
+{
+  "slot_utc": "2026-10-08T08:00:00+00:00",
+  "timestamp": "2026-10-08T10:18:53.941008+00:00",
+  "asset": "BTC",
+  "score": -2,
+  "max_score": 24,
+  "sentiment": "CONSOLIDATION",
+  "regime": "orange",
+  "history": [
+    {
+      "slot_utc": "2026-10-08T08:00:00+00:00",
+      "timestamp": "2026-10-08T10:18:53.941008+00:00",
+      "asset": "BTC",
+      "score": -2,
+      "max_score": 24,
+      "sentiment": "CONSOLIDATION",
+      "regime": "orange"
+    }
+  ]
+}
