@@ -1,6 +1,6 @@
 {
   "slot_utc": "2026-10-08T16:00:00+00:00",
-  "timestamp": "2026-10-08T18:21:44.333828",
+  "timestamp": "2026-10-08T18:26:11.995934",
   "asset": "BTC",
   "score": 0,
   "max_score": 20,
@@ -129,7 +129,7 @@
     },
     {
       "slot_utc": "2026-10-08T16:00:00+00:00",
-      "timestamp": "2026-10-08T18:21:44.333828",
+      "timestamp": "2026-10-08T18:26:11.995934",
       "asset": "BTC",
       "score": 0,
       "max_score": 20,
@@ -166,7 +166,7 @@
             "average_volume": 0
           },
           "profile": {
-            "volume_trend": "Insufficient Data",
+            "volume_trend": "Error",
             "current_volume": 0,
             "avg_volume": 0,
             "volume_spike": false,
@@ -180,10 +180,10 @@
         "trend": {
           "strength": 5,
           "direction": "Neutral",
-          "description": "Insufficient data",
+          "description": "Trend data unavailable",
           "quality": {
-            "status": "degraded",
-            "reason": "insufficient daily candles"
+            "status": "unavailable",
+            "reason": "451 Client Error:  for url: https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=100"
           }
         },
         "open_interest": {
@@ -234,7 +234,7 @@
         "average_volume": 0
       },
       "profile": {
-        "volume_trend": "Insufficient Data",
+        "volume_trend": "Error",
         "current_volume": 0,
         "avg_volume": 0,
         "volume_spike": false,
@@ -248,10 +248,10 @@
     "trend": {
       "strength": 5,
       "direction": "Neutral",
-      "description": "Insufficient data",
+      "description": "Trend data unavailable",
       "quality": {
-        "status": "degraded",
-        "reason": "insufficient daily candles"
+        "status": "unavailable",
+        "reason": "451 Client Error:  for url: https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=100"
       }
     },
     "open_interest": {
