@@ -1,32 +1,32 @@
 {
   "slot_utc": "2026-10-08T08:00:00+00:00",
-  "timestamp": "2026-10-08T10:52:19.183030",
+  "timestamp": "2026-10-08T11:31:54.647414",
   "asset": "BTC",
-  "score": -2,
+  "score": -1,
   "max_score": 24,
   "sentiment": "CONSOLIDATION",
   "regime": "orange",
   "history": [
     {
       "slot_utc": "2026-10-08T08:00:00+00:00",
-      "timestamp": "2026-10-08T10:52:19.183030",
+      "timestamp": "2026-10-08T11:31:54.647414",
       "asset": "BTC",
-      "score": -2,
+      "score": -1,
       "max_score": 24,
       "sentiment": "CONSOLIDATION",
       "regime": "orange",
       "indicators": {
         "early_reversal": {
-          "rsi_divergence": -2,
-          "macd_divergence": 1,
-          "whale_activity": 0,
-          "structure_break": -1,
-          "total": -2
+          "rsi_divergence": 0,
+          "macd_divergence": 0,
+          "whale_activity": -1,
+          "structure_break": 0,
+          "total": -1
         },
         "confirmatory": {
           "fear_greed": 1,
-          "trend_strength": 1,
-          "volume": -1,
+          "trend_strength": 0,
+          "volume": 0,
           "bollinger_bands": 0,
           "volume_profile": 0,
           "open_interest": 0,
@@ -38,30 +38,29 @@
       "metrics": {
         "volume": {
           "confirmation": {
-            "confirming": false,
-            "volume_trend": "Decreasing",
-            "signal": -1,
-            "description": "Volume is decreasing - Weak confirmation",
-            "current_volume": 35618367.6,
-            "average_volume": 58277501.88
+            "confirming": true,
+            "volume_trend": "Stable",
+            "signal": 0,
+            "description": "Volume data unavailable",
+            "current_volume": 0,
+            "average_volume": 0
           },
           "profile": {
-            "volume_trend": "Normal/Decreasing",
-            "current_volume": 629365540.0089946,
-            "avg_volume": 1349473065.7020137,
+            "volume_trend": "Insufficient Data",
+            "current_volume": 0,
+            "avg_volume": 0,
             "volume_spike": false,
             "volume_increasing": false,
-            "on_balance_volume": -3394001624.8390784,
-            "obv_trend": "Decreasing",
+            "on_balance_volume": 0,
+            "obv_trend": "Neutral",
             "signal": 0,
-            "confidence": "Low",
-            "timestamp": "2026-10-08T10:52:12.951376"
+            "confidence": "Low"
           }
         },
         "trend": {
-          "strength": 6,
-          "direction": "Down",
-          "description": "Trend strength: 6/10 - Down trend"
+          "strength": 5,
+          "direction": "Neutral",
+          "description": "Insufficient data"
         }
       },
       "signal": null,
@@ -71,16 +70,16 @@
   ],
   "indicators": {
     "early_reversal": {
-      "rsi_divergence": -2,
-      "macd_divergence": 1,
-      "whale_activity": 0,
-      "structure_break": -1,
-      "total": -2
+      "rsi_divergence": 0,
+      "macd_divergence": 0,
+      "whale_activity": -1,
+      "structure_break": 0,
+      "total": -1
     },
     "confirmatory": {
       "fear_greed": 1,
-      "trend_strength": 1,
-      "volume": -1,
+      "trend_strength": 0,
+      "volume": 0,
       "bollinger_bands": 0,
       "volume_profile": 0,
       "open_interest": 0,
@@ -92,30 +91,29 @@
   "metrics": {
     "volume": {
       "confirmation": {
-        "confirming": false,
-        "volume_trend": "Decreasing",
-        "signal": -1,
-        "description": "Volume is decreasing - Weak confirmation",
-        "current_volume": 35618367.6,
-        "average_volume": 58277501.88
+        "confirming": true,
+        "volume_trend": "Stable",
+        "signal": 0,
+        "description": "Volume data unavailable",
+        "current_volume": 0,
+        "average_volume": 0
       },
       "profile": {
-        "volume_trend": "Normal/Decreasing",
-        "current_volume": 629365540.0089946,
-        "avg_volume": 1349473065.7020137,
+        "volume_trend": "Insufficient Data",
+        "current_volume": 0,
+        "avg_volume": 0,
         "volume_spike": false,
         "volume_increasing": false,
-        "on_balance_volume": -3394001624.8390784,
-        "obv_trend": "Decreasing",
+        "on_balance_volume": 0,
+        "obv_trend": "Neutral",
         "signal": 0,
-        "confidence": "Low",
-        "timestamp": "2026-10-08T10:52:12.951376"
+        "confidence": "Low"
       }
     },
     "trend": {
-      "strength": 6,
-      "direction": "Down",
-      "description": "Trend strength: 6/10 - Down trend"
+      "strength": 5,
+      "direction": "Neutral",
+      "description": "Insufficient data"
     }
   },
   "signal": null,
