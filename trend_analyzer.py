@@ -30,7 +30,7 @@ class TrendAnalyzer:
         }
         """
         
-        if len(price_history) < 3:
+        if len(price_history) < 25:
             return {
                 'strength': 5,
                 'direction': 'Neutral',
@@ -39,38 +39,33 @@ class TrendAnalyzer:
         
         current_price = price_history[-1]
         previous_price = price_history[-2]
-        
-        # Calculate trend direction
-        price_change = current_price - previous_price
-        direction = 'Up' if price_change > 0 else 'Down' if price_change < 0 else 'Neutral'
-        
-        # Start with base strength
+        return_5 = (current_price / price_history[-6] - 1) * 100
+        return_20 = (current_price / price_history[-21] - 1) * 100
+        ema20 = sum(price_history[-20:]) / 20
+        ema20_prior = sum(price_history[-25:-5]) / 20 if len(price_history) >= 25 else ema20
+        direction = 'Up' if return_20 > 1 else 'Down' if return_20 < -1 else 'Neutral'
         strength = 5
-        
-        # Factor 1: Price momentum (±2 points)
-        momentum_pct = (abs(price_change) / previous_price) * 100
-        if momentum_pct > 2:
+
+        # Multi-day signed momentum avoids one-candle noise.
+        if return_20 >= 8 or return_5 >= 4:
             strength += 2
-        elif momentum_pct > 1:
+        elif return_20 >= 3 or return_5 >= 1.5:
             strength += 1
-        elif momentum_pct < -2:
+        elif return_20 <= -8 or return_5 <= -4:
             strength -= 2
-        elif momentum_pct < -1:
+        elif return_20 <= -3 or return_5 <= -1.5:
             strength -= 1
-        
-        # Factor 2: RSI level (±2 points)
-        if rsi > 70:
-            strength += 2  # Strong uptrend
-        elif rsi > 60:
+
+        # Price above/below a rising/falling 20-period baseline.
+        if current_price > ema20 and ema20 > ema20_prior:
             strength += 1
-        elif rsi < 30:
-            strength -= 2  # Strong downtrend
-        elif rsi < 40:
+        elif current_price < ema20 and ema20 < ema20_prior:
             strength -= 1
-        
-        # Factor 3: MACD histogram (±1 point)
+
+        # MACD histogram is only used as a normalized directional tie-breaker.
         macd_histogram = macd_line - signal_line
-        if abs(macd_histogram) > 0.5:
+        scale = max(abs(current_price), 1.0)
+        if abs(macd_histogram) / scale > 0.002:
             strength += 1 if macd_histogram > 0 else -1
         
         # Clamp to 1-10
@@ -79,7 +74,7 @@ class TrendAnalyzer:
         return {
             'strength': strength,
             'direction': direction,
-            'description': f'Trend strength: {strength}/10 - {direction} trend'
+            'description': f'Trend strength: {strength}/10 - {direction} trend; 5d={return_5:.2f}%, 20d={return_20:.2f}%'
         }
     
     def get_volume_confirmation(self, symbol=None):

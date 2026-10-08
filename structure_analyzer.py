@@ -60,14 +60,18 @@ class StructureAnalyzer:
             recent_closes = closes[-10:]
             recent_highs = highs[-10:]
             recent_lows = lows[-10:]
+            # Exclude the current candle from the reference swing. Otherwise
+            # a close can never break above its own high or below its own low.
+            prior_highs = recent_highs[:-1]
+            prior_lows = recent_lows[:-1]
             
             # Identify swing high (higher than neighbors)
-            swing_high = max(recent_highs)
-            swing_high_idx = recent_highs.index(swing_high)
+            swing_high = max(prior_highs)
+            swing_high_idx = prior_highs.index(swing_high)
             
             # Identify swing low (lower than neighbors)
-            swing_low = min(recent_lows)
-            swing_low_idx = recent_lows.index(swing_low)
+            swing_low = min(prior_lows)
+            swing_low_idx = prior_lows.index(swing_low)
             
             # Analyze trend structure
             higher_highs = False

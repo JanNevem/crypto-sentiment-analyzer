@@ -114,31 +114,13 @@ class WhaleTracker:
                 # For accurate whale tracking, would need paid API
                 pass
             
-            # Return simulated data based on market conditions
-            return self._estimate_whale_flow()
+            # Do not manufacture a directional whale signal when no reliable
+            # exchange-flow provider is configured.
+            return None
         
         except Exception as e:
             print(f"Error fetching exchange flow: {e}")
             return None
-    
-    def _estimate_whale_flow(self):
-        """
-        Estimate whale flow based on available data.
-        In production, would use Glassnode or similar paid service.
-        """
-        
-        # This is a simplified estimation
-        # In real implementation, would use:
-        # - Glassnode API (paid)
-        # - Santiment API (paid)
-        # - Blockchain.com API
-        
-        return {
-            'inflow': 50,  # BTC entering exchanges
-            'outflow': 75,  # BTC leaving exchanges
-            'net_flow': 25,  # Net outflow (positive = accumulating)
-            'source': 'Estimated'
-        }
     
     def _get_default_whale_activity(self):
         """Return default whale activity data."""

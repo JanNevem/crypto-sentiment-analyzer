@@ -54,20 +54,20 @@ def print_sentiment_display(result):
     print(f"  MACD Divergence: {early['macd_divergence']:+d}")
     print(f"  Whale Activity: {early['whale_activity']:+d}")
     print(f"  Structure Break: {early['structure_break']:+d}")
-    print(f"  └─ Early Reversal Total: {early['total']:+d}/8")
+    print(f"  └─ Early Reversal Total: {early['total']:+d}/6 (whale feed is data-quality neutral when unavailable)")
     
     # CONFIRMATORY INDICATORS
     print("\n📊 CONFIRMATORY INDICATORS (Confirming Signals):")
     confirm = indicators['confirmatory']
     print(f"  Fear & Greed: {confirm['fear_greed']:+d}")
     print(f"  Trend Strength: {confirm['trend_strength']:+d}")
-    print(f"  Volume: {confirm['volume']:+d}")
+    print(f"  Volume context: {confirm['volume']:+d} (not separately scored)")
     print(f"  Bollinger Bands: {confirm['bollinger_bands']:+d}")
     print(f"  Volume Profile: {confirm['volume_profile']:+d}")
     print(f"  Open Interest: {confirm['open_interest']:+d}")
     print(f"  Funding Rate: {confirm['funding_rate']:+d}")
     print(f"  Dollar Strength: {confirm['dollar_strength']:+d}")
-    print(f"  └─ Confirmatory Total: {confirm['total']:+d}/16")
+    print(f"  └─ Confirmatory Total: {confirm['total']:+d}/14")
     
     # Signal if generated
     if result.get('signal'):

@@ -1,6 +1,6 @@
 f"""
 Enhanced Crypto Market Sentiment Analyzer - Phase 3
-12 indicators split into Early Reversal + Confirmatory
+10 scored indicators plus non-scoring data-quality/context feeds
 With Signal Generation (Scout/Core/Max)
 """
 
@@ -23,7 +23,7 @@ from dollar_strength_analyzer import DollarStrengthAnalyzer
 
 
 class SentimentAnalyzer:
-    """Sentiment analyzer with 12 indicators and signal generation."""
+    """Sentiment analyzer with 10 scored indicators and signal generation."""
     
     def __init__(self):
         self.current_sentiment = None
@@ -51,37 +51,53 @@ class SentimentAnalyzer:
     # (Leading indicators - predict change)
     
     def get_rsi_divergence(self) -> Dict:
-        """[EARLY] RSI Divergence - Leading indicator"""
+        """[EARLY] Detect confirmed daily RSI divergence using price pivots."""
         try:
             url = "https://api.binance.com/api/v3/klines"
             params = {
                 'symbol': 'BTCUSDT',
-                'interval': '1w',
-                'limit': 14
+                'interval': '1d',
+                'limit': 120
             }
             
             response = requests.get(url, params=params, timeout=5)
             klines = response.json()
             closes = [float(k[4]) for k in klines]
             
-            # Calculate RSI
+            if len(closes) < 40:
+                return {'type': 'None', 'signal': 0}
+
             deltas = np.diff(closes)
-            seed = deltas[:14]
-            up = seed[seed >= 0].sum() / 14
-            down = -seed[seed < 0].sum() / 14
-            rs = up / down if down != 0 else 0
-            rsi = 100 - (100 / (1 + rs))
-            
-            self.rsi_history = closes
-            
-            # Detect divergence
-            if len(closes) >= 3:
-                price_higher = closes[-1] > closes[-2]
-                rsi_lower = rsi < 50
-                
-                if price_higher and rsi_lower:
+            gains = np.maximum(deltas, 0)
+            losses = np.maximum(-deltas, 0)
+            avg_gain = np.mean(gains[:14])
+            avg_loss = np.mean(losses[:14])
+            rsi_values = [50.0]
+            for index in range(14, len(deltas) + 1):
+                avg_gain = (avg_gain * 13 + gains[index - 1]) / 14
+                avg_loss = (avg_loss * 13 + losses[index - 1]) / 14
+                rs = avg_gain / avg_loss if avg_loss else 100
+                rsi_values.append(100 - (100 / (1 + rs)))
+            rsi_values = [rsi_values[0]] * (len(closes) - len(rsi_values)) + rsi_values
+
+            # Compare the latest two confirmed pivot lows/highs in a short
+            # recent window. The latest candle is not treated as a pivot.
+            pivots_low = [i for i in range(2, len(closes) - 2)
+                          if closes[i] < closes[i-1] and closes[i] <= closes[i+1]
+                          and closes[i] < closes[i-2] and closes[i] <= closes[i+2]]
+            pivots_high = [i for i in range(2, len(closes) - 2)
+                           if closes[i] > closes[i-1] and closes[i] >= closes[i+1]
+                           and closes[i] > closes[i-2] and closes[i] >= closes[i+2]]
+            pivots_low = [i for i in pivots_low if i >= len(closes) - 45]
+            pivots_high = [i for i in pivots_high if i >= len(closes) - 45]
+            self.rsi_history = rsi_values
+            if len(pivots_low) >= 2:
+                first, second = pivots_low[-2:]
+                if closes[second] < closes[first] and rsi_values[second] > rsi_values[first] + 3:
                     return {'type': 'Bullish Divergence', 'signal': 2}
-                elif not price_higher and rsi > 50:
+            if len(pivots_high) >= 2:
+                first, second = pivots_high[-2:]
+                if closes[second] > closes[first] and rsi_values[second] < rsi_values[first] - 3:
                     return {'type': 'Bearish Divergence', 'signal': -2}
             
             return {'type': 'None', 'signal': 0}
@@ -90,31 +106,39 @@ class SentimentAnalyzer:
             return {'type': 'None', 'signal': 0}
     
     def get_macd_divergence(self) -> Dict:
-        """[EARLY] MACD Divergence - Leading indicator"""
+        """[EARLY] Daily MACD momentum and histogram direction."""
         try:
             url = "https://api.binance.com/api/v3/klines"
             params = {
                 'symbol': 'BTCUSDT',
                 'interval': '1d',
-                'limit': 26
+                'limit': 100
             }
             
             response = requests.get(url, params=params, timeout=5)
             klines = response.json()
             closes = [float(k[4]) for k in klines]
             
-            # Calculate MACD
-            ema12 = pd.Series(closes).ewm(span=12).mean().iloc[-1]
-            ema26 = pd.Series(closes).ewm(span=26).mean().iloc[-1]
-            macd_line = ema12 - ema26
-            
-            self.macd_history.append(macd_line)
+            if len(closes) < 35:
+                return {'type': 'None', 'signal': 0}
+            series = pd.Series(closes)
+            ema12 = series.ewm(span=12, adjust=False).mean()
+            ema26 = series.ewm(span=26, adjust=False).mean()
+            macd = ema12 - ema26
+            signal = macd.ewm(span=9, adjust=False).mean()
+            histogram = macd - signal
+            macd_line = float(macd.iloc[-1])
+            signal_line = float(signal.iloc[-1])
+            hist_now = float(histogram.iloc[-1])
+            hist_prior = float(histogram.iloc[-2])
+            self.macd_history = histogram.tolist()[-20:]
             self.price_history = closes
-            
-            if macd_line > 0:
-                return {'type': 'Bullish', 'signal': 1}
-            else:
-                return {'type': 'Bearish', 'signal': -1}
+
+            if macd_line > signal_line and hist_now > hist_prior:
+                return {'type': 'Bullish Momentum', 'signal': 2 if hist_now > 0 else 1}
+            if macd_line < signal_line and hist_now < hist_prior:
+                return {'type': 'Bearish Momentum', 'signal': -2 if hist_now < 0 else -1}
+            return {'type': 'Neutral Momentum', 'signal': 0}
         except Exception as e:
             print(f"Error in MACD Divergence: {e}")
             return {'type': 'None', 'signal': 0}
@@ -212,8 +236,8 @@ class SentimentAnalyzer:
         """[CONFIRM] Get volume profile analysis"""
         return self.volume_analyzer.get_volume_analysis()
     
-    def get_open_interest_trend(self) -> str:
-        """[CONFIRM] Fetch Open Interest trend"""
+    def get_open_interest_trend(self) -> Dict:
+        """[CONFIRM] Score open interest only in combination with price direction."""
         try:
             url = "https://fapi.binance.com/fapi/v1/openInterest"
             params = {'symbol': 'BTCUSDT'}
@@ -232,18 +256,26 @@ class SentimentAnalyzer:
             with open(cache_file, 'w', encoding='utf-8') as f:
                 json.dump({'last_oi': current_oi}, f)
             
-            if current_oi > previous_oi * 1.05:
-                return "Increasing"
-            elif current_oi < previous_oi * 0.95:
-                return "Decreasing"
-            else:
-                return "Stable"
+            oi_change = (current_oi / previous_oi - 1) if previous_oi else 0
+            price_response = requests.get(
+                "https://api.binance.com/api/v3/klines",
+                params={'symbol': 'BTCUSDT', 'interval': '4h', 'limit': 2},
+                timeout=5
+            )
+            price_rows = price_response.json()
+            price_change = float(price_rows[-1][4]) / float(price_rows[-2][4]) - 1 if len(price_rows) >= 2 else 0
+            oi_direction = "Increasing" if oi_change >= 0.05 else "Decreasing" if oi_change <= -0.05 else "Stable"
+            price_direction = "Up" if price_change > 0 else "Down" if price_change < 0 else "Flat"
+            # Aligned price and OI changes are the only high-confidence cases;
+            # conflicting changes are deliberately neutral rather than guessed.
+            score = 2 if oi_direction == "Increasing" and price_direction == "Up" else -2 if oi_direction == "Increasing" and price_direction == "Down" else 0
+            return {'trend': oi_direction, 'price_direction': price_direction, 'change_pct': round(oi_change * 100, 2), 'score': score}
         except Exception as e:
             print(f"Error fetching Open Interest: {e}")
-            return "Stable"
+            return {'trend': 'Unavailable', 'price_direction': 'Unknown', 'change_pct': None, 'score': 0}
     
-    def get_funding_rate(self) -> str:
-        """[CONFIRM] Fetch current funding rate"""
+    def get_funding_rate(self) -> Dict:
+        """[CONFIRM] Fetch funding and score crowded positioning contrarianly."""
         try:
             url = "https://fapi.binance.com/fapi/v1/fundingRate"
             params = {'symbol': 'BTCUSDT', 'limit': 1}
@@ -251,15 +283,11 @@ class SentimentAnalyzer:
             response = requests.get(url, params=params, timeout=5)
             rate = float(response.json()[0]['fundingRate'])
             
-            if rate > 0.0005:
-                return "Positive"
-            elif rate < -0.0005:
-                return "Negative"
-            else:
-                return "Neutral"
+            score = -2 if rate > 0.0005 else 2 if rate < -0.0005 else 0
+            return {'state': 'Positive' if rate > 0.0005 else 'Negative' if rate < -0.0005 else 'Neutral', 'rate': rate, 'score': score}
         except Exception as e:
             print(f"Error fetching Funding Rate: {e}")
-            return "Neutral"
+            return {'state': 'Unavailable', 'rate': None, 'score': 0}
     
     # ==================== SCORING CONVERSION ====================
     
@@ -307,7 +335,7 @@ class SentimentAnalyzer:
     # ==================== MAIN ANALYSIS ====================
     
     def analyze_sentiment(self) -> Dict:
-        """Analyze all 12 indicators split into two sections."""
+        """Analyze reliable indicators split into early and confirmatory sections."""
         
         print("\n" + "="*70)
         print(f"ANALYZING SENTIMENT - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -316,22 +344,22 @@ class SentimentAnalyzer:
         # EARLY REVERSAL INDICATORS (Leading - predict change)
         print("\n[EARLY REVERSAL INDICATORS - Leading Signals]")
         
-        print("[1/11] RSI Divergence...")
+        print("[1/10] RSI Divergence...")
         rsi_div = self.get_rsi_divergence()
         rsi_div_score = rsi_div['signal']
         print(f"      RSI Divergence: {rsi_div['type']} -> Score: {rsi_div_score:+d}")
         
-        print("[2/11] MACD Divergence...")
+        print("[2/10] MACD Momentum...")
         macd_div = self.get_macd_divergence()
         macd_div_score = macd_div['signal']
         print(f"      MACD Divergence: {macd_div['type']} -> Score: {macd_div_score:+d}")
         
-        print("[3/11] Whale Accumulation...")
+        print("[context] Whale Activity (data quality only)...")
         whale = self.get_whale_accumulation()
         whale_score = whale['signal']
         print(f"      Whales: {whale['activity']} -> Score: {whale_score:+d}")
         
-        print("[4/11] Break of Structure...")
+        print("[3/10] Break of Structure...")
         structure = self.get_structure_break()
         structure_score = structure['signal']
         print(f"      Structure: {structure['structure']} -> Score: {structure_score:+d}")
@@ -341,12 +369,12 @@ class SentimentAnalyzer:
         # CONFIRMATORY INDICATORS (Lagging - confirm change)
         print("\n[CONFIRMATORY INDICATORS - Confirming Signals]")
         
-        print("[5/11] Fear & Greed Index...")
+        print("[4/10] Fear & Greed Index...")
         fg_value, fg_sentiment = self.get_fear_greed_index()
         fg_score = self._convert_to_score(fg_value, fg_sentiment, "fear_greed")
         print(f"      Fear & Greed: {fg_sentiment} -> Score: {fg_score:+d}")
         
-        print("[6/11] Trend Strength...")
+        print("[5/10] Trend Strength...")
         trend = self.get_trend_strength()
         if trend['strength'] >= 8:
             trend_score = 2
@@ -360,32 +388,32 @@ class SentimentAnalyzer:
             trend_score = 0
         print(f"      Trend: {trend['direction']} ({trend['strength']}/10) -> Score: {trend_score:+d}")
         
-        print("[7/11] Volume Confirmation...")
+        print("[context] Volume Confirmation (context only)...")
         volume = self.get_volume_confirmation()
-        volume_score = volume['signal']
-        print(f"      Volume: {volume['volume_trend']} -> Score: {volume_score:+d}")
+        volume_score = 0
+        print(f"      Volume: {volume['volume_trend']} -> Score: excluded (profile is the scored participation feed)")
         
-        print("[8/11] Bollinger Bands...")
+        print("[6/10] Bollinger Bands...")
         bb_signal = self.get_bollinger_bands()
         bb_score = self._convert_to_score(0, bb_signal, "bollinger")
         print(f"      Bollinger: {bb_signal} -> Score: {bb_score:+d}")
         
-        print("[9/12] Volume Profile...")
+        print("[7/10] Volume Profile...")
         vol_profile = self.get_volume_profile()
         vol_profile_score = vol_profile['signal']
         print(f"      Volume Profile: {vol_profile['volume_trend']} -> Score: {vol_profile_score:+d}")
         
-        print("[10/12] Open Interest...")
+        print("[8/10] Open Interest...")
         oi_signal = self.get_open_interest_trend()
-        oi_score = self._convert_to_score(0, oi_signal, "oi")
-        print(f"      Open Interest: {oi_signal} -> Score: {oi_score:+d}")
+        oi_score = oi_signal['score']
+        print(f"      Open Interest: {oi_signal['trend']} + price {oi_signal['price_direction']} -> Score: {oi_score:+d}")
         
-        print("[11/12] Funding Rate...")
+        print("[9/10] Funding Rate...")
         fr_signal = self.get_funding_rate()
-        fr_score = self._convert_to_score(0, fr_signal, "funding")
-        print(f"      Funding Rate: {fr_signal} -> Score: {fr_score:+d}")
+        fr_score = fr_signal['score']
+        print(f"      Funding Rate: {fr_signal['state']} (contrarian) -> Score: {fr_score:+d}")
 
-        print("[12/12] Dollar Strength...")
+        print("[10/10] Dollar Strength...")
         dollar = self.get_dollar_strength()
         dollar_score = dollar['score']
         print(f"      Dollar: {dollar['trend']} -> Score: {dollar_score:+d}")
@@ -395,11 +423,11 @@ class SentimentAnalyzer:
         
         # TOTAL CALCULATION
         total_score = early_reversal_total + confirmatory_total
-        max_score = 24  # 12 indicators × 2
+        max_score = 20  # 10 directional feeds × 2; unavailable/context feeds score zero
         
         print(f"\n[CALCULATION]")
-        print(f"Early Reversal Score: {early_reversal_total:+d} / 8")
-        print(f"Confirmatory Score: {confirmatory_total:+d} / 16")
+        print(f"Early Reversal Score: {early_reversal_total:+d} / 6")
+        print(f"Confirmatory Score: {confirmatory_total:+d} / 14")
         print(f"Total Score: {total_score:+d} / {max_score}")
         
         # Determine sentiment
@@ -461,6 +489,8 @@ class SentimentAnalyzer:
                     'profile': vol_profile,
                 },
                 'trend': trend,
+                'open_interest': oi_signal,
+                'funding': fr_signal,
             },
             'changed': changed,
             'previous_sentiment': self.previous_sentiment,

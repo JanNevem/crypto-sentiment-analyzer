@@ -64,7 +64,7 @@ class VolumeAnalyzer:
             obv = 0
             for i in range(len(closes)):
                 if i == 0:
-                    obv = volumes[i] if closes[i] > closes[i] else -volumes[i]
+                    obv = 0
                 else:
                     if closes[i] > closes[i-1]:
                         obv += volumes[i]
@@ -76,7 +76,7 @@ class VolumeAnalyzer:
             obv_temp = 0
             for i in range(len(closes)):
                 if i == 0:
-                    obv_temp = volumes[i] if closes[i] > closes[i] else -volumes[i]
+                    obv_temp = 0
                 else:
                     if closes[i] > closes[i-1]:
                         obv_temp += volumes[i]
@@ -86,11 +86,14 @@ class VolumeAnalyzer:
             
             # OBV trend: increasing or decreasing
             if len(obv_values) >= 5:
-                obv_trend_direction = obv_values[-1] > obv_values[-5]
+                obv_delta = obv_values[-1] - obv_values[-5]
+                obv_trend_direction = obv_delta > 0
+                obv_trend_bearish = obv_delta < 0
             else:
                 obv_trend_direction = False
-            
-            obv_trend = "Increasing" if obv_trend_direction else "Decreasing"
+                obv_trend_bearish = False
+
+            obv_trend = "Increasing" if obv_trend_direction else "Decreasing" if obv_trend_bearish else "Neutral"
             
             # Determine signal
             if volume_spike and volume_increasing:
@@ -118,6 +121,11 @@ class VolumeAnalyzer:
             elif obv_trend_direction:
                 signal = 1
                 volume_trend = "OBV Increasing"
+                confidence = "Medium"
+
+            elif obv_trend_bearish:
+                signal = -1
+                volume_trend = "OBV Decreasing"
                 confidence = "Medium"
             
             else:
