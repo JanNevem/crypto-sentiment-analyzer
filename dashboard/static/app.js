@@ -67,7 +67,7 @@
     const closedCount = candles.filter((candle) => candle.closed !== false).length;
     const activeCount = candles.length - closedCount;
     const proxyCount = candles.filter((candle) => candle.sentiment_source === "PRICE_PROXY").length;
-    $("#chart-summary").textContent = ready ? `${closedCount} closed 4H candles${activeCount ? ` + ${activeCount} current formation` : ""}. ${proxyCount} older slots use a 24H price-momentum proxy; analyzer snapshots remain authoritative.` : "Closed 4H candle data is temporarily unavailable.";
+    $("#chart-summary").textContent = ready ? `${closedCount} closed 4H candles${activeCount ? ` + ${activeCount} current formation` : ""}. ${proxyCount} older slots use a 48H volatility-normalized proxy; analyzer snapshots remain authoritative.` : "Closed 4H candle data is temporarily unavailable.";
     if (typeof Chart === "undefined" || !ready) return;
     if (candleChart) candleChart.destroy();
     candleChart = new Chart($("#candle-chart"), {

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import math
 import os
+import statistics
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -145,21 +147,32 @@ def _sentiment_for_slot(slot: str | None, history: list[dict[str, Any]], latest:
     return "UNRECORDED"
 
 
-def _price_proxy_sentiment(candles: list[dict[str, Any]], index: int) -> str:
-    """Classify missing analyzer slots from trailing 24-hour price momentum."""
+def _price_proxy_sentiment(candles: list[dict[str, Any]], index: int) -> tuple[str, dict[str, float]]:
+    """Classify missing slots from 48-hour momentum normalized by recent 4H volatility."""
     candle = candles[index]
     close = _decimal(candle.get("c"))
-    open_price = _decimal(candle.get("o"))
-    lookback_index = max(0, index - 6)
+    lookback_index = max(0, index - 12)
     anchor = _decimal(candles[lookback_index].get("c"))
     momentum = (close / anchor - 1) if anchor else 0.0
-    if lookback_index == index and open_price:
-        momentum = close / open_price - 1
-    if momentum >= 0.02:
-        return "BULLISH"
-    if momentum <= -0.02:
-        return "BEARISH"
-    return "CONSOLIDATION"
+    returns = []
+    for position in range(max(1, index - 12), index + 1):
+        previous_close = _decimal(candles[position - 1].get("c"))
+        current_close = _decimal(candles[position].get("c"))
+        if previous_close > 0 and current_close > 0:
+            returns.append(math.log(current_close / previous_close))
+    volatility = statistics.pstdev(returns) if len(returns) > 1 else abs(momentum)
+    volatility = max(volatility, 0.002)
+    normalized_momentum = momentum / volatility
+    details = {
+        "momentum_pct": round(momentum * 100, 3),
+        "volatility_pct": round(volatility * 100, 3),
+        "normalized_momentum": round(normalized_momentum, 3),
+    }
+    if normalized_momentum >= 1.0:
+        return "BULLISH", details
+    if normalized_momentum <= -1.0:
+        return "BEARISH", details
+    return "CONSOLIDATION", details
 
 
 def _apply_candle_sentiment(candles: list[dict[str, Any]], history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
@@ -168,11 +181,13 @@ def _apply_candle_sentiment(candles: list[dict[str, Any]], history: list[dict[st
     for index, candle in enumerate(candles):
         analyzer_sentiment = _sentiment_for_slot(candle.get("slot_utc"), history, latest)
         if analyzer_sentiment == "UNRECORDED":
+            proxy_sentiment, proxy_details = _price_proxy_sentiment(candles, index)
             labeled.append({
                 **candle,
-                "sentiment": _price_proxy_sentiment(candles, index),
+                "sentiment": proxy_sentiment,
                 "sentiment_source": "PRICE_PROXY",
-                "proxy_window": "24H momentum",
+                "proxy_window": "48H volatility-normalized momentum",
+                "proxy_details": proxy_details,
             })
         else:
             labeled.append({**candle, "sentiment": analyzer_sentiment, "sentiment_source": "ANALYZER"})
