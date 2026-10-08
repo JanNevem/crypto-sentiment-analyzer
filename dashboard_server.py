@@ -168,28 +168,50 @@ def _price_proxy_sentiment(candles: list[dict[str, Any]], index: int) -> tuple[s
         "volatility_pct": round(volatility * 100, 3),
         "normalized_momentum": round(normalized_momentum, 3),
     }
-    if normalized_momentum >= 1.0:
+    if normalized_momentum >= 0.75:
         return "BULLISH", details
-    if normalized_momentum <= -1.0:
+    if normalized_momentum <= -0.75:
         return "BEARISH", details
     return "CONSOLIDATION", details
 
 
 def _apply_candle_sentiment(candles: list[dict[str, Any]], history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
-    """Keep analyzer labels authoritative and fill only missing slots with a labeled proxy."""
+    """Keep analyzer labels authoritative and smooth proxy transitions across 4H candles."""
+    candidates = [_price_proxy_sentiment(candles, index) for index in range(len(candles))]
     labeled = []
+    state = "CONSOLIDATION"
+    pending = None
+    pending_count = 0
     for index, candle in enumerate(candles):
         analyzer_sentiment = _sentiment_for_slot(candle.get("slot_utc"), history, latest)
         if analyzer_sentiment == "UNRECORDED":
-            proxy_sentiment, proxy_details = _price_proxy_sentiment(candles, index)
+            candidate, proxy_details = candidates[index]
+            if candidate == state:
+                pending = None
+                pending_count = 0
+            elif candidate == pending:
+                pending_count += 1
+            else:
+                pending = candidate
+                pending_count = 1
+            # Two consecutive 4H candles confirm a normal transition. A 1.5x
+            # volatility move is strong enough to transition immediately.
+            strong_move = abs(proxy_details["normalized_momentum"]) >= 1.5
+            if pending and (pending_count >= 2 or strong_move):
+                state = pending
+                pending = None
+                pending_count = 0
             labeled.append({
                 **candle,
-                "sentiment": proxy_sentiment,
+                "sentiment": state,
                 "sentiment_source": "PRICE_PROXY",
-                "proxy_window": "48H volatility-normalized momentum",
+                "proxy_window": "48H volatility-normalized momentum with 4H confirmation",
                 "proxy_details": proxy_details,
             })
         else:
+            state = analyzer_sentiment
+            pending = None
+            pending_count = 0
             labeled.append({**candle, "sentiment": analyzer_sentiment, "sentiment_source": "ANALYZER"})
     return labeled
 

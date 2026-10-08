@@ -28,7 +28,7 @@
 
     <section class="card chart-card" aria-labelledby="history-heading">
       <div class="section-heading"><div><p class="eyebrow">Confirmation timeframe</p><h2 id="history-heading">BTC / 4H candlesticks</h2></div><span class="muted">Closed candles + current formation · read-only</span></div>
-      <div class="sentiment-legend" aria-label="Sentiment area legend"><span><i class="legend-swatch bullish"></i>Bullish</span><span><i class="legend-swatch neutral"></i>Consolidation</span><span><i class="legend-swatch bearish"></i>Bearish</span><span><i class="legend-swatch proxy"></i>48H volatility proxy for older slots</span></div>
+      <div class="sentiment-legend" aria-label="Sentiment area legend"><span><i class="legend-swatch bullish"></i>Bullish</span><span><i class="legend-swatch neutral"></i>Consolidation</span><span><i class="legend-swatch bearish"></i>Bearish</span><span><i class="legend-swatch proxy"></i>48H proxy · 4H confirmed</span></div>
       <div class="chart-wrap candle-chart-wrap"><canvas id="candle-chart" role="img" aria-label="Bitcoin four-hour candlestick chart with sentiment-colored areas"></canvas><p id="candle-empty" class="empty" hidden>Four-hour candle data is temporarily unavailable.</p></div>
       <p id="chart-summary" class="muted">Loading closed 4H candles…</p>
       <details><summary>View chart data as a table</summary><div class="table-wrap"><table><caption class="sr-only">Persisted sentiment score history</caption><thead><tr><th>UTC time</th><th>Score</th><th>Sentiment</th></tr></thead><tbody id="history-table"></tbody></table></div></details>
