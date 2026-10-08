@@ -29,27 +29,50 @@ def _load():
         return {}
 
 
+def _snapshot_point(result, now, slot):
+    """Build a display snapshot from the existing analyzer result."""
+    return {
+        "slot_utc": slot,
+        "timestamp": result.get("timestamp", now.isoformat()),
+        "asset": "BTC",
+        "score": result["total_score"],
+        "max_score": result["max_score"],
+        "sentiment": result["sentiment"],
+        "regime": _regime(result["sentiment"]),
+        "indicators": result.get("indicators", {}),
+        "signal": result.get("signal"),
+        "changed": result.get("changed", False),
+        "previous_sentiment": result.get("previous_sentiment"),
+    }
+
+
+def _replace_slot(history, point):
+    """Replace the current four-hour point or append a new one."""
+    next_history = []
+    replaced = False
+    for item in history:
+        if isinstance(item, dict) and item.get("slot_utc") == point["slot_utc"]:
+            next_history.append(point)
+            replaced = True
+        else:
+            next_history.append(item)
+    if not replaced:
+        next_history.append(point)
+    return next_history[-HISTORY_LIMIT:]
+
+
 def update_visual_state(result):
-    """Keep one BTC graph point per four-hour UTC slot."""
+    """Keep one BTC graph point per four-hour UTC slot and refresh current details."""
     now = datetime.now(timezone.utc)
     slot = _slot(now).isoformat()
     previous = _load()
-    history = list(previous.get("history", []))
+    history = previous.get("history", [])
+    if not isinstance(history, list):
+        history = []
     updated_now = previous.get("slot_utc") != slot
-    if updated_now:
-        point = {
-            "slot_utc": slot,
-            "timestamp": now.isoformat(),
-            "asset": "BTC",
-            "score": result["total_score"],
-            "max_score": result["max_score"],
-            "sentiment": result["sentiment"],
-            "regime": _regime(result["sentiment"]),
-        }
-        history = (history + [point])[-HISTORY_LIMIT:]
-        state = {**point, "history": history}
-        with open(STATE_FILE, "w", encoding="utf-8") as handle:
-            json.dump(state, handle, indent=2)
-    else:
-        state = previous
+    point = _snapshot_point(result, now, slot)
+    history = _replace_slot(history, point)
+    state = {**previous, **point, "history": history}
+    with open(STATE_FILE, "w", encoding="utf-8") as handle:
+        json.dump(state, handle, indent=2, ensure_ascii=False)
     return {**state, "updated_now": updated_now}
