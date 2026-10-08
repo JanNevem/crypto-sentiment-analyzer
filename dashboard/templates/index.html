@@ -7,6 +7,9 @@
   <title>BTC Sentiment / Signal Cockpit</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.5.0/build/global/luxon.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1/dist/chartjs-chart-financial.min.js" defer></script>
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
@@ -16,7 +19,7 @@
     <div class="toolbar"><span class="live-dot" aria-hidden="true"></span><span id="connection-status" role="status">Connecting</span><button id="refresh-now" type="button">Refresh now</button></div>
   </header>
   <main id="main" class="shell">
-    <div class="status-line"><span id="data-status">Reading persisted state…</span><span>Auto-refresh: 30s</span></div>
+    <div class="status-line"><span id="data-status">Reading persisted state…</span><span>Auto-refresh: 15m · Confirmation timeframe: 4H</span></div>
     <section class="overview" aria-label="Current Bitcoin sentiment">
       <article class="card score-card"><p class="eyebrow">Latest score</p><div><strong id="score">—</strong><span id="score-max">/ 24</span></div><div class="score-track" aria-hidden="true"><span id="score-marker"></span></div><p id="score-note" class="muted">Waiting for an analyzer snapshot.</p></article>
       <article class="card"><p class="eyebrow">Market regime</p><h2 id="sentiment" class="sentiment neutral">No snapshot</h2><p id="sentiment-note" class="muted">The dashboard reads visual_state.json.</p></article>
@@ -24,9 +27,10 @@
     </section>
 
     <section class="card chart-card" aria-labelledby="history-heading">
-      <div class="section-heading"><div><p class="eyebrow">Persisted visual history</p><h2 id="history-heading">Sentiment score over time</h2></div><span class="muted">One point per UTC four-hour slot</span></div>
-      <div class="chart-wrap"><canvas id="history-chart" role="img" aria-label="Bitcoin sentiment score history"></canvas><p id="chart-empty" class="empty" hidden>No history points have been persisted yet.</p></div>
-      <p id="chart-summary" class="muted">Chart data will appear after the next analyzer cycle.</p>
+      <div class="section-heading"><div><p class="eyebrow">Confirmation timeframe</p><h2 id="history-heading">BTC / 4H candlesticks</h2></div><span class="muted">Closed candles · read-only visualization</span></div>
+      <div class="sentiment-legend" aria-label="Sentiment area legend"><span><i class="legend-swatch bullish"></i>Bullish</span><span><i class="legend-swatch neutral"></i>Consolidation</span><span><i class="legend-swatch bearish"></i>Bearish</span><span><i class="legend-swatch unrecorded"></i>Unrecorded slot</span></div>
+      <div class="chart-wrap candle-chart-wrap"><canvas id="candle-chart" role="img" aria-label="Bitcoin four-hour candlestick chart with sentiment-colored areas"></canvas><p id="candle-empty" class="empty" hidden>Four-hour candle data is temporarily unavailable.</p></div>
+      <p id="chart-summary" class="muted">Loading closed 4H candles…</p>
       <details><summary>View chart data as a table</summary><div class="table-wrap"><table><caption class="sr-only">Persisted sentiment score history</caption><thead><tr><th>UTC time</th><th>Score</th><th>Sentiment</th></tr></thead><tbody id="history-table"></tbody></table></div></details>
     </section>
 

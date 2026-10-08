@@ -1,5 +1,5 @@
 (() => {
-  let chart;
+  let candleChart;
   let volumeChart;
   const $ = (selector) => document.querySelector(selector);
   const signed = (value) => value === null || value === undefined ? "—" : `${Number(value) > 0 ? "+" : ""}${value}`;
@@ -29,19 +29,49 @@
     $("#empty-state").hidden = Boolean(meta.has_snapshot);
   }
 
-  function renderChart(history) {
-    const labels = history.map((point) => shortDate(point.timestamp));
-    const values = history.map((point) => Number(point.score) || 0);
+  const sentimentFill = (sentiment) => {
+    const value = String(sentiment || "CONSOLIDATION");
+    if (value.includes("BULLISH")) return "rgba(99,223,161,.12)";
+    if (value.includes("BEARISH")) return "rgba(255,126,129,.12)";
+    if (value === "UNRECORDED") return "rgba(154,173,184,.035)";
+    return "rgba(255,180,84,.10)";
+  };
+
+  const sentimentBandsPlugin = {
+    id: "sentimentBands",
+    beforeDatasetsDraw(chartInstance) {
+      const area = chartInstance.chartArea;
+      const scale = chartInstance.scales.x;
+      const points = chartInstance.data.datasets[0]?.data || [];
+      if (!area || !scale || !points.length) return;
+      const context = chartInstance.ctx;
+      context.save();
+      points.forEach((point, index) => {
+        const start = Math.max(area.left, scale.getPixelForValue(point.x));
+        const next = index + 1 < points.length ? scale.getPixelForValue(points[index + 1].x) : area.right;
+        const end = Math.min(area.right, next);
+        if (end > start) {
+          context.fillStyle = sentimentFill(point.sentiment);
+          context.fillRect(start, area.top, end - start, area.bottom - area.top);
+        }
+      });
+      context.restore();
+    }
+  };
+
+  function renderChart(candles, history) {
     const table = $("#history-table");
     table.innerHTML = history.slice().reverse().map((point) => `<tr><td>${escapeHtml(dateText(point.timestamp))}</td><td>${escapeHtml(signed(point.score))} / ${escapeHtml(point.max_score)}</td><td>${escapeHtml(point.sentiment)}</td></tr>`).join("");
-    $("#chart-empty").hidden = history.length > 0;
-    $("#chart-summary").textContent = history.length ? `${history.length} persisted point${history.length === 1 ? "" : "s"}; latest score ${signed(values[values.length - 1])}.` : "Chart data will appear after the next analyzer cycle.";
-    if (typeof Chart === "undefined") { $("#chart-summary").textContent = "Chart.js could not load; the accessible table below remains available."; return; }
-    if (chart) chart.destroy();
-    chart = new Chart($("#history-chart"), {
-      type: "line",
-      data: { labels, datasets: [{ label: "BTC sentiment score", data: values, borderColor: "#56d9ff", backgroundColor: "rgba(86,217,255,.13)", pointBackgroundColor: values.map((value) => value > 0 ? "#63dfa1" : value < 0 ? "#ff7e81" : "#ffb454"), pointBorderColor: "#0b1117", pointBorderWidth: 2, pointRadius: 5, tension: .25, fill: true }] },
-      options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { labels: { color: "#f4f7f8" } }, tooltip: { callbacks: { label: (context) => ` Score: ${signed(context.raw)}` } } }, scales: { x: { ticks: { color: "#9aadb8", maxTicksLimit: 8 }, grid: { color: "rgba(45,65,79,.45)" } }, y: { suggestedMin: -24, suggestedMax: 24, ticks: { color: "#9aadb8", callback: (value) => signed(value) }, grid: { color: (context) => Number(context.tick.value) === 0 ? "#ffb454" : "rgba(45,65,79,.45)", lineDash: (context) => Number(context.tick.value) === 0 ? [5,5] : [] } } } }
+    const ready = Array.isArray(candles) && candles.length > 0;
+    $("#candle-empty").hidden = ready;
+    $("#chart-summary").textContent = ready ? `${candles.length} closed 4H candles. Background bands show the persisted sentiment regime for each slot; the chart is read-only.` : "Closed 4H candle data is temporarily unavailable.";
+    if (typeof Chart === "undefined" || !ready) return;
+    if (candleChart) candleChart.destroy();
+    candleChart = new Chart($("#candle-chart"), {
+      type: "candlestick",
+      data: { datasets: [{ label: "BTCUSDT / 4H", data: candles, color: { up: "#63dfa1", down: "#ff7e81", unchanged: "#ffb454" }, borderColor: { up: "#63dfa1", down: "#ff7e81", unchanged: "#ffb454" }, barThickness: 7 }] },
+      plugins: [sentimentBandsPlugin],
+      options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "none" }, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { type: "time", time: { unit: "day", displayFormats: { day: "MMM d" } }, ticks: { color: "#9aadb8", maxTicksLimit: 10 }, grid: { color: "rgba(45,65,79,.45)" } }, y: { ticks: { color: "#9aadb8", callback: (value) => `$${Number(value).toLocaleString()}` }, grid: { color: "rgba(45,65,79,.45)" } } } }
     });
   }
 
@@ -83,12 +113,12 @@
       const response = await fetch(`/api/dashboard?ts=${Date.now()}`, {cache: "no-store"});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
-      renderOverview(payload); renderChart(payload.history || []); renderAnalytics(payload.analytics || {}); renderIndicators(payload.latest?.indicators || []); renderSignals(payload.signals || []);
+      renderOverview(payload); renderChart(payload.candles || [], payload.history || []); renderAnalytics(payload.analytics || {}); renderIndicators(payload.latest?.indicators || []); renderSignals(payload.signals || []);
       $("#connection-status").textContent = "Live"; $(".live-dot").className = "live-dot live"; $("#data-status").textContent = `Loaded ${payload.meta.history_count || 0} persisted point${payload.meta.history_count === 1 ? "" : "s"}`; $("#updated").textContent = `Updated ${dateText(payload.meta.refreshed_at)}`;
     } catch (error) { $("#connection-status").textContent = "Unavailable"; $(".live-dot").className = "live-dot error"; $("#data-status").textContent = `Dashboard error: ${error.message}`; }
   }
 
   $("#refresh-now").addEventListener("click", refresh);
   refresh();
-  window.setInterval(refresh, 30000);
+  window.setInterval(refresh, 15 * 60 * 1000);
 })();

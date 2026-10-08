@@ -6,6 +6,8 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 from flask import Flask, jsonify, render_template
 
@@ -15,6 +17,7 @@ VISUAL_STATE_FILE = Path(os.getenv("VISUAL_STATE_FILE", str(BASE_DIR / "visual_s
 SIGNAL_HISTORY_FILE = Path(os.getenv("SIGNAL_HISTORY_FILE", str(BASE_DIR / "signal_history.json")))
 
 app = Flask(__name__, template_folder="dashboard/templates", static_folder="dashboard/static")
+BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
 
 
 def _read_json(path: Path, fallback: Any) -> Any:
@@ -122,6 +125,56 @@ def _historical_trend(history: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _slot_from_ms(value: Any) -> str | None:
+    try:
+        return datetime.fromtimestamp(int(value) / 1000, tz=timezone.utc).replace(
+            minute=0, second=0, microsecond=0
+        ).isoformat()
+    except (TypeError, ValueError, OSError, OverflowError):
+        return None
+
+
+def _sentiment_for_slot(slot: str | None, history: list[dict[str, Any]], latest: dict[str, Any] | None) -> str:
+    if slot:
+        exact = next((point for point in history if point.get("slot_utc") == slot), None)
+        if exact and exact.get("sentiment"):
+            return str(exact["sentiment"])
+    if latest and latest.get("slot_utc") == slot and latest.get("sentiment"):
+        return str(latest["sentiment"])
+    return "UNRECORDED"
+
+
+def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Fetch closed BTCUSDT 4H candles for a read-only confirmation view."""
+    query = urlencode({"symbol": "BTCUSDT", "interval": "4h", "limit": 90})
+    request = Request(f"{BINANCE_KLINES_URL}?{query}", headers={"User-Agent": "BTC-Sentiment-Dashboard/1.0"})
+    try:
+        with urlopen(request, timeout=8) as response:
+            raw = json.loads(response.read().decode("utf-8"))
+    except (OSError, ValueError, TypeError):
+        return []
+    now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    candles = []
+    for row in raw if isinstance(raw, list) else []:
+        if not isinstance(row, list) or len(row) < 7 or _decimal(row[6]) > now_ms:
+            continue
+        slot = _slot_from_ms(row[0])
+        try:
+            candles.append({
+                "x": int(row[0]),
+                "o": _decimal(row[1]),
+                "h": _decimal(row[2]),
+                "l": _decimal(row[3]),
+                "c": _decimal(row[4]),
+                "volume": _decimal(row[7]) if len(row) > 7 else 0,
+                "slot_utc": slot,
+                "sentiment": _sentiment_for_slot(slot, history, latest),
+            })
+        except (TypeError, ValueError):
+            continue
+    return candles
+
+
 def dashboard_payload() -> dict[str, Any]:
     state = _read_json(VISUAL_STATE_FILE, {})
     if not isinstance(state, dict):
@@ -147,9 +200,11 @@ def dashboard_payload() -> dict[str, Any]:
             "market_context": state.get("market_context", {}),
             "signal": state.get("signal"),
         }
+    candles = _four_hour_candles(history, latest)
     return {
         "latest": latest,
         "history": history[-180:],
+        "candles": candles,
         "signals": signals[-20:],
         "analytics": {
             "volume_breakdown": _volume_breakdown(state.get("metrics", {})),
@@ -158,6 +213,8 @@ def dashboard_payload() -> dict[str, Any]:
         "meta": {
             "has_snapshot": latest is not None,
             "history_count": len(history),
+            "candle_count": len(candles),
+            "candle_timeframe": "4h",
             "refreshed_at": datetime.now(timezone.utc).isoformat(),
             "state_file": VISUAL_STATE_FILE.name,
         },
