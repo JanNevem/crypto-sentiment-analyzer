@@ -1,6 +1,6 @@
 {
-  "slot_utc": "2026-10-08T08:00:00+00:00",
-  "timestamp": "2026-10-08T11:31:54.647414",
+  "slot_utc": "2026-10-08T12:00:00+00:00",
+  "timestamp": "2026-10-08T12:37:50.513628",
   "asset": "BTC",
   "score": -1,
   "max_score": 24,
@@ -10,6 +10,66 @@
     {
       "slot_utc": "2026-10-08T08:00:00+00:00",
       "timestamp": "2026-10-08T11:31:54.647414",
+      "asset": "BTC",
+      "score": -1,
+      "max_score": 24,
+      "sentiment": "CONSOLIDATION",
+      "regime": "orange",
+      "indicators": {
+        "early_reversal": {
+          "rsi_divergence": 0,
+          "macd_divergence": 0,
+          "whale_activity": -1,
+          "structure_break": 0,
+          "total": -1
+        },
+        "confirmatory": {
+          "fear_greed": 1,
+          "trend_strength": 0,
+          "volume": 0,
+          "bollinger_bands": 0,
+          "volume_profile": 0,
+          "open_interest": 0,
+          "funding_rate": 0,
+          "dollar_strength": -1,
+          "total": 0
+        }
+      },
+      "metrics": {
+        "volume": {
+          "confirmation": {
+            "confirming": true,
+            "volume_trend": "Stable",
+            "signal": 0,
+            "description": "Volume data unavailable",
+            "current_volume": 0,
+            "average_volume": 0
+          },
+          "profile": {
+            "volume_trend": "Insufficient Data",
+            "current_volume": 0,
+            "avg_volume": 0,
+            "volume_spike": false,
+            "volume_increasing": false,
+            "on_balance_volume": 0,
+            "obv_trend": "Neutral",
+            "signal": 0,
+            "confidence": "Low"
+          }
+        },
+        "trend": {
+          "strength": 5,
+          "direction": "Neutral",
+          "description": "Insufficient data"
+        }
+      },
+      "signal": null,
+      "changed": false,
+      "previous_sentiment": "CONSOLIDATION"
+    },
+    {
+      "slot_utc": "2026-10-08T12:00:00+00:00",
+      "timestamp": "2026-10-08T12:37:50.513628",
       "asset": "BTC",
       "score": -1,
       "max_score": 24,
