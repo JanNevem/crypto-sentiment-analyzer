@@ -19,7 +19,7 @@
     <div class="toolbar"><span class="live-dot" aria-hidden="true"></span><span id="connection-status" role="status">Connecting</span><button id="refresh-now" type="button">Refresh now</button></div>
   </header>
   <main id="main" class="shell">
-    <div class="status-line"><span id="data-status">Reading persisted state…</span><span>Auto-refresh: 15m · Confirmation timeframe: 4H</span></div>
+    <div class="status-line"><span id="data-status">Reading persisted state…</span><span>Auto-refresh: 15m · Confirmation timeframe: 1D</span></div>
     <section class="overview" aria-label="Current Bitcoin sentiment">
       <article class="card score-card"><p class="eyebrow">Latest score</p><div><strong id="score">—</strong><span id="score-max">/ 24</span></div><div class="score-track" aria-hidden="true"><span id="score-marker"></span></div><p id="score-note" class="muted">Waiting for an analyzer snapshot.</p></article>
       <article class="card"><p class="eyebrow">Market regime</p><h2 id="sentiment" class="sentiment neutral">No snapshot</h2><p id="sentiment-note" class="muted">The dashboard reads visual_state.json.</p></article>
@@ -27,10 +27,10 @@
     </section>
 
     <section class="card chart-card" aria-labelledby="history-heading">
-      <div class="section-heading"><div><p class="eyebrow">Confirmation timeframe</p><h2 id="history-heading">BTC / 4H candlesticks</h2></div><span class="muted">Closed candles + current formation · read-only</span></div>
-      <div class="sentiment-legend" aria-label="Sentiment area legend"><span><i class="legend-swatch bullish"></i>Bullish</span><span><i class="legend-swatch neutral"></i>Consolidation</span><span><i class="legend-swatch bearish"></i>Bearish</span><span><i class="legend-swatch proxy"></i>48H proxy · 4H confirmed</span></div>
-      <div class="chart-wrap candle-chart-wrap"><canvas id="candle-chart" role="img" aria-label="Bitcoin four-hour candlestick chart with sentiment-colored areas"></canvas><p id="candle-empty" class="empty" hidden>Four-hour candle data is temporarily unavailable.</p></div>
-      <p id="chart-summary" class="muted">Loading closed 4H candles…</p>
+      <div class="section-heading"><div><p class="eyebrow">Confirmation timeframe</p><h2 id="history-heading">BTC / daily candlesticks</h2></div><span class="muted">Completed candles only · read-only</span></div>
+      <div class="sentiment-legend" aria-label="Confirmation regime legend"><span><i class="legend-swatch bullish"></i>Confirmed bullish</span><span><i class="legend-swatch bearish"></i>Confirmed bearish</span><span><i class="legend-swatch uncertain"></i>Neutral / mixed — wait for confirmation</span></div>
+      <div class="chart-wrap candle-chart-wrap"><canvas id="candle-chart" role="img" aria-label="Bitcoin daily candlestick chart with multi-confirmation regime areas"></canvas><p id="candle-empty" class="empty" hidden>Completed daily candle data is temporarily unavailable.</p></div>
+      <p id="chart-summary" class="muted">Loading completed daily candles…</p>
       <details><summary>View chart data as a table</summary><div class="table-wrap"><table><caption class="sr-only">Persisted sentiment score history</caption><thead><tr><th>UTC time</th><th>Score</th><th>Sentiment</th></tr></thead><tbody id="history-table"></tbody></table></div></details>
     </section>
 

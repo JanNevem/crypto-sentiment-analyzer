@@ -128,11 +128,11 @@ def _historical_trend(history: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _slot_from_ms(value: Any) -> str | None:
+def _slot_from_ms(value: Any, daily: bool = False) -> str | None:
     try:
-        return datetime.fromtimestamp(int(value) / 1000, tz=timezone.utc).replace(
-            minute=0, second=0, microsecond=0
-        ).isoformat()
+        stamp = datetime.fromtimestamp(int(value) / 1000, tz=timezone.utc)
+        return (stamp.replace(hour=0, minute=0, second=0, microsecond=0) if daily else
+                stamp.replace(minute=0, second=0, microsecond=0)).isoformat()
     except (TypeError, ValueError, OSError, OverflowError):
         return None
 
@@ -147,91 +147,77 @@ def _sentiment_for_slot(slot: str | None, history: list[dict[str, Any]], latest:
     return "UNRECORDED"
 
 
-def _price_proxy_sentiment(candles: list[dict[str, Any]], index: int) -> tuple[str, dict[str, float]]:
-    """Classify missing slots from 48-hour momentum normalized by recent 4H volatility."""
-    candle = candles[index]
-    close = _decimal(candle.get("c"))
-    lookback_index = max(0, index - 12)
-    anchor = _decimal(candles[lookback_index].get("c"))
-    momentum = (close / anchor - 1) if anchor else 0.0
-    returns = []
-    for position in range(max(1, index - 12), index + 1):
+def _ema(values: list[float], period: int, index: int) -> float:
+    window = values[:index + 1]
+    if not window:
+        return 0.0
+    seed = sum(window[:period]) / min(period, len(window))
+    result = seed
+    multiplier = 2 / (period + 1)
+    for value in window[min(period, len(window)):]:
+        result = (value - result) * multiplier + result
+    return result
+
+
+def _daily_adx(candles: list[dict[str, Any]], index: int, period: int = 14) -> float | None:
+    if index < period * 2:
+        return None
+    true_ranges, plus_dm, minus_dm = [], [], []
+    for position in range(1, index + 1):
+        high, low = _decimal(candles[position].get("h")), _decimal(candles[position].get("l"))
         previous_close = _decimal(candles[position - 1].get("c"))
-        current_close = _decimal(candles[position].get("c"))
-        if previous_close > 0 and current_close > 0:
-            returns.append(math.log(current_close / previous_close))
-    volatility = statistics.pstdev(returns) if len(returns) > 1 else abs(momentum)
-    volatility = max(volatility, 0.002)
-    normalized_momentum = momentum / volatility
-    details = {
-        "momentum_pct": round(momentum * 100, 3),
-        "volatility_pct": round(volatility * 100, 3),
-        "normalized_momentum": round(normalized_momentum, 3),
-    }
-    if normalized_momentum >= 0.75:
-        return "BULLISH", details
-    if normalized_momentum <= -0.75:
-        return "BEARISH", details
-    return "CONSOLIDATION", details
+        previous_high = _decimal(candles[position - 1].get("h"))
+        previous_low = _decimal(candles[position - 1].get("l"))
+        true_ranges.append(max(high - low, abs(high - previous_close), abs(low - previous_close)))
+        up_move, down_move = high - previous_high, previous_low - low
+        plus_dm.append(up_move if up_move > down_move and up_move > 0 else 0.0)
+        minus_dm.append(down_move if down_move > up_move and down_move > 0 else 0.0)
+    dx_values = []
+    for end in range(period, len(true_ranges) + 1):
+        tr = sum(true_ranges[end - period:end])
+        plus = 100 * sum(plus_dm[end - period:end]) / tr if tr else 0.0
+        minus = 100 * sum(minus_dm[end - period:end]) / tr if tr else 0.0
+        dx_values.append(100 * abs(plus - minus) / (plus + minus) if plus + minus else 0.0)
+    return sum(dx_values[-period:]) / min(period, len(dx_values)) if dx_values else None
 
 
-def _apply_candle_sentiment(candles: list[dict[str, Any]], history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
-    """Keep analyzer labels authoritative and smooth proxy transitions across 4H candles."""
-    candidates = [_price_proxy_sentiment(candles, index) for index in range(len(candles))]
-    labeled = []
-    state = "CONSOLIDATION"
-    pending = None
-    pending_count = 0
+def _daily_regimes(candles: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    closes = [_decimal(candle.get("c")) for candle in candles]
+    regimes = []
     for index, candle in enumerate(candles):
-        analyzer_sentiment = _sentiment_for_slot(candle.get("slot_utc"), history, latest)
-        if analyzer_sentiment == "UNRECORDED":
-            candidate, proxy_details = candidates[index]
-            if candidate == state:
-                pending = None
-                pending_count = 0
-            elif candidate == pending:
-                pending_count += 1
-            else:
-                pending = candidate
-                pending_count = 1
-            # Two consecutive 4H candles confirm a normal transition. A 1.5x
-            # volatility move is strong enough to transition immediately.
-            strong_move = abs(proxy_details["normalized_momentum"]) >= 1.5
-            if pending and (pending_count >= 2 or strong_move):
-                state = pending
-                pending = None
-                pending_count = 0
-            labeled.append({
-                **candle,
-                "sentiment": state,
-                "sentiment_source": "PRICE_PROXY",
-                "proxy_window": "48H volatility-normalized momentum with 4H confirmation",
-                "proxy_details": proxy_details,
-            })
-        else:
-            state = analyzer_sentiment
-            pending = None
-            pending_count = 0
-            labeled.append({**candle, "sentiment": analyzer_sentiment, "sentiment_source": "ANALYZER"})
-    return labeled
+        ema20 = _ema(closes, 20, index)
+        ema50 = _ema(closes, 50, index)
+        prior_ema20 = _ema(closes, 20, index - 1) if index else ema20
+        momentum = closes[index] / closes[index - 20] - 1 if index >= 20 and closes[index - 20] else 0.0
+        adx = _daily_adx(candles, index)
+        bullish = index >= 50 and closes[index] > ema20 > ema50 and ema20 > prior_ema20 and momentum >= 0.05 and adx is not None and adx >= 20
+        bearish = index >= 50 and closes[index] < ema20 < ema50 and ema20 < prior_ema20 and momentum <= -0.05 and adx is not None and adx >= 20
+        regime = "BULLISH" if bullish else "BEARISH" if bearish else "UNCERTAIN"
+        regimes.append({
+            **candle,
+            "regime": regime,
+            "regime_source": "DAILY_CONFIRMATION",
+            "confirmation": {"ema20": round(ema20, 2), "ema50": round(ema50, 2), "adx": round(adx, 2) if adx is not None else None, "momentum_20d_pct": round(momentum * 100, 2)},
+        })
+    return regimes
 
 
-def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
-    """Fetch closed BTCUSDT 4H candles for a read-only confirmation view."""
-    query = urlencode({"symbol": "BTCUSDT", "interval": "4h", "limit": 180})
+def _daily_candles() -> list[dict[str, Any]]:
+    """Fetch completed BTCUSDT daily candles for a conservative confirmation view."""
+    query = urlencode({"symbol": "BTCUSDT", "interval": "1d", "limit": 400})
     request = Request(f"{BINANCE_KLINES_URL}?{query}", headers={"User-Agent": "BTC-Sentiment-Dashboard/1.0"})
     global CANDLE_CACHE
     try:
         with urlopen(request, timeout=8) as response:
             raw = json.loads(response.read().decode("utf-8"))
     except (OSError, ValueError, TypeError):
-        return _apply_candle_sentiment(CANDLE_CACHE, history, latest)
+        return CANDLE_CACHE
     now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     candles = []
     for row in raw if isinstance(raw, list) else []:
         if not isinstance(row, list) or len(row) < 7:
             continue
-        slot = _slot_from_ms(row[0])
+        slot = _slot_from_ms(row[0], daily=True)
         try:
             candles.append({
                 "x": int(row[0]),
@@ -241,15 +227,14 @@ def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | N
                 "c": _decimal(row[4]),
                 "volume": _decimal(row[7]) if len(row) > 7 else 0,
                 "slot_utc": slot,
-                "sentiment": "UNRECORDED",
                 "closed": _decimal(row[6]) <= now_ms,
             })
         except (TypeError, ValueError):
             continue
-    if candles:
-        CANDLE_CACHE = candles
-        return _apply_candle_sentiment(candles, history, latest)
-    return _apply_candle_sentiment(CANDLE_CACHE, history, latest)
+    closed = [candle for candle in candles if candle["closed"]]
+    if closed:
+        CANDLE_CACHE = _daily_regimes(closed)
+    return CANDLE_CACHE
 
 
 def dashboard_payload() -> dict[str, Any]:
@@ -277,7 +262,7 @@ def dashboard_payload() -> dict[str, Any]:
             "market_context": state.get("market_context", {}),
             "signal": state.get("signal"),
         }
-    candles = _four_hour_candles(history, latest)
+    candles = _daily_candles()
     return {
         "latest": latest,
         "history": history[-180:],
@@ -291,7 +276,7 @@ def dashboard_payload() -> dict[str, Any]:
             "has_snapshot": latest is not None,
             "history_count": len(history),
             "candle_count": len(candles),
-            "candle_timeframe": "4h",
+            "candle_timeframe": "1d",
             "refreshed_at": datetime.now(timezone.utc).isoformat(),
             "state_file": VISUAL_STATE_FILE.name,
         },

@@ -30,11 +30,10 @@
   }
 
   const sentimentFill = (sentiment) => {
-    const value = String(sentiment || "CONSOLIDATION");
+    const value = String(sentiment || "UNCERTAIN");
     if (value.includes("BULLISH")) return "rgba(99,223,161,.24)";
     if (value.includes("BEARISH")) return "rgba(255,126,129,.24)";
-    if (value === "UNRECORDED") return "rgba(106,119,130,.18)";
-    return "rgba(255,180,84,.24)";
+    return "rgba(130,145,155,.18)";
   };
 
   const sentimentBandsPlugin = {
@@ -51,7 +50,7 @@
         const next = index + 1 < points.length ? scale.getPixelForValue(points[index + 1].x) : area.right;
         const end = Math.min(area.right, next);
         if (end > start) {
-          context.fillStyle = sentimentFill(point.sentiment);
+          context.fillStyle = sentimentFill(point.regime);
           context.fillRect(start, area.top, end - start, area.bottom - area.top);
         }
       });
@@ -66,15 +65,17 @@
     $("#candle-empty").hidden = ready;
     const closedCount = candles.filter((candle) => candle.closed !== false).length;
     const activeCount = candles.length - closedCount;
-    const proxyCount = candles.filter((candle) => candle.sentiment_source === "PRICE_PROXY").length;
-    $("#chart-summary").textContent = ready ? `${closedCount} closed 4H candles${activeCount ? ` + ${activeCount} current formation` : ""}. ${proxyCount} older slots use a responsive 48H volatility proxy with 4H confirmation; analyzer snapshots remain authoritative.` : "Closed 4H candle data is temporarily unavailable.";
+    const bullishCount = candles.filter((candle) => candle.regime === "BULLISH").length;
+    const bearishCount = candles.filter((candle) => candle.regime === "BEARISH").length;
+    const uncertainCount = candles.filter((candle) => candle.regime === "UNCERTAIN").length;
+    $("#chart-summary").textContent = ready ? `${closedCount} completed daily candles. Confirmed: ${bullishCount} bullish / ${bearishCount} bearish; ${uncertainCount} neutral or mixed. EMA20/50, ADX, and 20-day momentum must agree.` : "Completed daily candle data is temporarily unavailable.";
     if (typeof Chart === "undefined" || !ready) return;
     if (candleChart) candleChart.destroy();
     candleChart = new Chart($("#candle-chart"), {
       type: "candlestick",
-      data: { datasets: [{ label: "BTCUSDT / 4H", data: candles, backgroundColors: { up: "#7c858e", down: "#7c858e", unchanged: "#7c858e" }, borderColors: { up: "#7c858e", down: "#7c858e", unchanged: "#7c858e" }, borderWidth: 1, barThickness: 4 }] },
+      data: { datasets: [{ label: "BTCUSDT / 1D", data: candles, backgroundColors: { up: "#7c858e", down: "#7c858e", unchanged: "#7c858e" }, borderColors: { up: "#7c858e", down: "#7c858e", unchanged: "#7c858e" }, borderWidth: 1, barThickness: 4 }] },
       plugins: [sentimentBandsPlugin],
-      options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "none" }, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { type: "time", time: { unit: "day", displayFormats: { day: "MMM d" } }, ticks: { color: "#9aadb8", maxTicksLimit: 10 }, grid: { color: "rgba(45,65,79,.45)" } }, y: { ticks: { color: "#9aadb8", callback: (value) => `$${Number(value).toLocaleString()}` }, grid: { color: "rgba(45,65,79,.45)" } } } }
+      options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "none" }, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { type: "time", time: { unit: "month", displayFormats: { month: "MMM yyyy" } }, ticks: { color: "#9aadb8", maxTicksLimit: 12 }, grid: { color: "rgba(45,65,79,.45)" } }, y: { ticks: { color: "#9aadb8", callback: (value) => `$${Number(value).toLocaleString()}` }, grid: { color: "rgba(45,65,79,.45)" } } } }
     });
   }
 
