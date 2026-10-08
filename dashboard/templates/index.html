@@ -30,6 +30,11 @@
       <details><summary>View chart data as a table</summary><div class="table-wrap"><table><caption class="sr-only">Persisted sentiment score history</caption><thead><tr><th>UTC time</th><th>Score</th><th>Sentiment</th></tr></thead><tbody id="history-table"></tbody></table></div></details>
     </section>
 
+    <section class="advanced-grid" aria-label="Advanced market analytics">
+      <article class="card"><div class="section-heading"><div><p class="eyebrow">Participation</p><h2>Volume breakdown</h2></div><span id="volume-confidence" class="muted">Awaiting metrics</span></div><div class="metric-chart-wrap"><canvas id="volume-chart" role="img" aria-label="Current volume compared with average volume"></canvas><p id="volume-empty" class="empty" hidden>Volume details will appear after the next analyzer cycle.</p></div><div id="volume-stats" class="metric-grid"></div></article>
+      <article class="card"><div class="section-heading"><div><p class="eyebrow">Momentum</p><h2>Historical trend</h2></div><span id="trend-status" class="muted">Awaiting history</span></div><div id="trend-stats" class="trend-stats"></div><p id="trend-summary" class="muted">Trend statistics need persisted history points.</p></article>
+    </section>
+
     <div class="two-column">
       <section class="card" aria-labelledby="indicator-heading"><div class="section-heading"><div><p class="eyebrow">Evidence ledger</p><h2 id="indicator-heading">Indicator contributions</h2></div><span id="indicator-count" class="muted">0 feeds</span></div><div id="indicator-groups" class="indicator-groups"><p class="empty">Indicator details appear when the analyzer writes them.</p></div></section>
       <section class="card" aria-labelledby="signal-heading"><div class="section-heading"><div><p class="eyebrow">Alert trail</p><h2 id="signal-heading">Recent signals</h2></div></div><div class="table-wrap"><table><caption class="sr-only">Recent generated signals</caption><thead><tr><th>Time</th><th>Signal</th><th>Direction</th></tr></thead><tbody id="signal-table"></tbody></table></div><p id="signal-empty" class="empty">No generated signals persisted yet.</p></section>

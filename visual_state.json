@@ -1,6 +1,6 @@
 {
   "slot_utc": "2026-10-08T08:00:00+00:00",
-  "timestamp": "2026-10-08T10:18:53.941008+00:00",
+  "timestamp": "2026-10-08T10:52:19.183030",
   "asset": "BTC",
   "score": -2,
   "max_score": 24,
@@ -9,12 +9,116 @@
   "history": [
     {
       "slot_utc": "2026-10-08T08:00:00+00:00",
-      "timestamp": "2026-10-08T10:18:53.941008+00:00",
+      "timestamp": "2026-10-08T10:52:19.183030",
       "asset": "BTC",
       "score": -2,
       "max_score": 24,
       "sentiment": "CONSOLIDATION",
-      "regime": "orange"
+      "regime": "orange",
+      "indicators": {
+        "early_reversal": {
+          "rsi_divergence": -2,
+          "macd_divergence": 1,
+          "whale_activity": 0,
+          "structure_break": -1,
+          "total": -2
+        },
+        "confirmatory": {
+          "fear_greed": 1,
+          "trend_strength": 1,
+          "volume": -1,
+          "bollinger_bands": 0,
+          "volume_profile": 0,
+          "open_interest": 0,
+          "funding_rate": 0,
+          "dollar_strength": -1,
+          "total": 0
+        }
+      },
+      "metrics": {
+        "volume": {
+          "confirmation": {
+            "confirming": false,
+            "volume_trend": "Decreasing",
+            "signal": -1,
+            "description": "Volume is decreasing - Weak confirmation",
+            "current_volume": 35618367.6,
+            "average_volume": 58277501.88
+          },
+          "profile": {
+            "volume_trend": "Normal/Decreasing",
+            "current_volume": 629365540.0089946,
+            "avg_volume": 1349473065.7020137,
+            "volume_spike": false,
+            "volume_increasing": false,
+            "on_balance_volume": -3394001624.8390784,
+            "obv_trend": "Decreasing",
+            "signal": 0,
+            "confidence": "Low",
+            "timestamp": "2026-10-08T10:52:12.951376"
+          }
+        },
+        "trend": {
+          "strength": 6,
+          "direction": "Down",
+          "description": "Trend strength: 6/10 - Down trend"
+        }
+      },
+      "signal": null,
+      "changed": false,
+      "previous_sentiment": "CONSOLIDATION"
     }
-  ]
+  ],
+  "indicators": {
+    "early_reversal": {
+      "rsi_divergence": -2,
+      "macd_divergence": 1,
+      "whale_activity": 0,
+      "structure_break": -1,
+      "total": -2
+    },
+    "confirmatory": {
+      "fear_greed": 1,
+      "trend_strength": 1,
+      "volume": -1,
+      "bollinger_bands": 0,
+      "volume_profile": 0,
+      "open_interest": 0,
+      "funding_rate": 0,
+      "dollar_strength": -1,
+      "total": 0
+    }
+  },
+  "metrics": {
+    "volume": {
+      "confirmation": {
+        "confirming": false,
+        "volume_trend": "Decreasing",
+        "signal": -1,
+        "description": "Volume is decreasing - Weak confirmation",
+        "current_volume": 35618367.6,
+        "average_volume": 58277501.88
+      },
+      "profile": {
+        "volume_trend": "Normal/Decreasing",
+        "current_volume": 629365540.0089946,
+        "avg_volume": 1349473065.7020137,
+        "volume_spike": false,
+        "volume_increasing": false,
+        "on_balance_volume": -3394001624.8390784,
+        "obv_trend": "Decreasing",
+        "signal": 0,
+        "confidence": "Low",
+        "timestamp": "2026-10-08T10:52:12.951376"
+      }
+    },
+    "trend": {
+      "strength": 6,
+      "direction": "Down",
+      "description": "Trend strength: 6/10 - Down trend"
+    }
+  },
+  "signal": null,
+  "changed": false,
+  "previous_sentiment": "CONSOLIDATION"
 }

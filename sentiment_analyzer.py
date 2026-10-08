@@ -455,6 +455,13 @@ class SentimentAnalyzer:
         return {
             'sentiment': sentiment,
             'indicators': self.indicator_scores,
+            'metrics': {
+                'volume': {
+                    'confirmation': volume,
+                    'profile': vol_profile,
+                },
+                'trend': trend,
+            },
             'changed': changed,
             'previous_sentiment': self.previous_sentiment,
             'timestamp': self.last_update.isoformat(),

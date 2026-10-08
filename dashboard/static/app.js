@@ -1,5 +1,6 @@
 (() => {
   let chart;
+  let volumeChart;
   const $ = (selector) => document.querySelector(selector);
   const signed = (value) => value === null || value === undefined ? "—" : `${Number(value) > 0 ? "+" : ""}${value}`;
   const escapeHtml = (value) => String(value ?? "—").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
@@ -44,6 +45,25 @@
     });
   }
 
+  function renderAnalytics(analytics) {
+    const volume = analytics?.volume_breakdown || {};
+    const trend = analytics?.historical_trend || {};
+    const currentVolume = Number(volume.current_volume) || 0;
+    const averageVolume = Number(volume.average_volume) || 0;
+    const ratio = volume.volume_ratio === null || volume.volume_ratio === undefined ? "—" : `${Number(volume.volume_ratio).toFixed(2)}×`;
+    $("#volume-confidence").textContent = volume.confidence ? `${volume.confidence} confidence` : "Awaiting metrics";
+    $("#volume-stats").innerHTML = [["Current", currentVolume ? currentVolume.toLocaleString() : "—"], ["Average", averageVolume ? averageVolume.toLocaleString() : "—"], ["Ratio", ratio], ["Profile", volume.volume_trend || "Unavailable"], ["OBV", volume.obv ? volume.obv.toLocaleString() : "—"], ["Spike", volume.volume_spike ? "Detected" : "None"]].map(([label, value]) => `<div class="metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+    $("#volume-empty").hidden = currentVolume > 0 || averageVolume > 0;
+    if (volumeChart) volumeChart.destroy();
+    if (typeof Chart !== "undefined" && (currentVolume > 0 || averageVolume > 0)) {
+      volumeChart = new Chart($("#volume-chart"), { type: "bar", data: { labels: ["Current", "Average"], datasets: [{ label: "Quote volume", data: [currentVolume, averageVolume], backgroundColor: ["#56d9ff", "#425766"], borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => ` ${Number(context.raw).toLocaleString()}` } } }, scales: { x: { ticks: { color: "#9aadb8" }, grid: { display: false } }, y: { ticks: { color: "#9aadb8", callback: (value) => Number(value).toLocaleString() }, grid: { color: "rgba(45,65,79,.45)" } } } } });
+    }
+    const points = Number(trend.points) || 0;
+    $("#trend-status").textContent = trend.status ? `${trend.status} / ${points} point${points === 1 ? "" : "s"}` : "Awaiting history";
+    $("#trend-summary").textContent = points > 1 ? `${trend.direction} trend; ${signed(trend.delta)} points from first to latest, with ${trend.volatility} points of volatility.` : "Add another four-hour snapshot to calculate direction and volatility.";
+    $("#trend-stats").innerHTML = [["Direction", trend.direction || "—"], ["Average", signed(trend.average_score)], ["High", signed(trend.high_score)], ["Low", signed(trend.low_score)], ["Positive", trend.positive_points ?? "—"], ["Negative", trend.negative_points ?? "—"]].map(([label, value]) => `<div class="trend-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+  }
+
   function renderIndicators(groups) {
     const container = $("#indicator-groups");
     const count = groups.reduce((total, group) => total + (group.indicators || []).length, 0);
@@ -63,7 +83,7 @@
       const response = await fetch(`/api/dashboard?ts=${Date.now()}`, {cache: "no-store"});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
-      renderOverview(payload); renderChart(payload.history || []); renderIndicators(payload.latest?.indicators || []); renderSignals(payload.signals || []);
+      renderOverview(payload); renderChart(payload.history || []); renderAnalytics(payload.analytics || {}); renderIndicators(payload.latest?.indicators || []); renderSignals(payload.signals || []);
       $("#connection-status").textContent = "Live"; $(".live-dot").className = "live-dot live"; $("#data-status").textContent = `Loaded ${payload.meta.history_count || 0} persisted point${payload.meta.history_count === 1 ? "" : "s"}`; $("#updated").textContent = `Updated ${dateText(payload.meta.refreshed_at)}`;
     } catch (error) { $("#connection-status").textContent = "Unavailable"; $(".live-dot").className = "live-dot error"; $("#data-status").textContent = `Dashboard error: ${error.message}`; }
   }

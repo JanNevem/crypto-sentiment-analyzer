@@ -29,6 +29,13 @@ def _load():
         return {}
 
 
+def _json_default(value):
+    """Convert NumPy scalar values from analyzer modules to JSON primitives."""
+    if hasattr(value, "item"):
+        return value.item()
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
 def _snapshot_point(result, now, slot):
     """Build a display snapshot from the existing analyzer result."""
     return {
@@ -40,6 +47,7 @@ def _snapshot_point(result, now, slot):
         "sentiment": result["sentiment"],
         "regime": _regime(result["sentiment"]),
         "indicators": result.get("indicators", {}),
+        "metrics": result.get("metrics", {}),
         "signal": result.get("signal"),
         "changed": result.get("changed", False),
         "previous_sentiment": result.get("previous_sentiment"),
@@ -73,6 +81,8 @@ def update_visual_state(result):
     point = _snapshot_point(result, now, slot)
     history = _replace_slot(history, point)
     state = {**previous, **point, "history": history}
-    with open(STATE_FILE, "w", encoding="utf-8") as handle:
-        json.dump(state, handle, indent=2, ensure_ascii=False)
+    temporary_file = f"{STATE_FILE}.tmp"
+    with open(temporary_file, "w", encoding="utf-8") as handle:
+        json.dump(state, handle, indent=2, ensure_ascii=False, default=_json_default)
+    os.replace(temporary_file, STATE_FILE)
     return {**state, "updated_now": updated_now}
