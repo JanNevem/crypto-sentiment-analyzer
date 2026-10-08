@@ -1,9 +1,9 @@
 {
-  "slot_utc": "2026-10-08T12:00:00+00:00",
-  "timestamp": "2026-10-08T14:44:04.239268",
+  "slot_utc": "2026-10-08T16:00:00+00:00",
+  "timestamp": "2026-10-08T18:21:44.333828",
   "asset": "BTC",
-  "score": -1,
-  "max_score": 24,
+  "score": 0,
+  "max_score": 20,
   "sentiment": "CONSOLIDATION",
   "regime": "orange",
   "history": [
@@ -126,15 +126,90 @@
       "signal": null,
       "changed": false,
       "previous_sentiment": "CONSOLIDATION"
+    },
+    {
+      "slot_utc": "2026-10-08T16:00:00+00:00",
+      "timestamp": "2026-10-08T18:21:44.333828",
+      "asset": "BTC",
+      "score": 0,
+      "max_score": 20,
+      "sentiment": "CONSOLIDATION",
+      "regime": "orange",
+      "indicators": {
+        "early_reversal": {
+          "rsi_divergence": 0,
+          "macd_divergence": 0,
+          "whale_activity": 0,
+          "structure_break": 0,
+          "total": 0
+        },
+        "confirmatory": {
+          "fear_greed": 1,
+          "trend_strength": 0,
+          "volume": 0,
+          "bollinger_bands": 0,
+          "volume_profile": 0,
+          "open_interest": 0,
+          "funding_rate": 0,
+          "dollar_strength": -1,
+          "total": 0
+        }
+      },
+      "metrics": {
+        "volume": {
+          "confirmation": {
+            "confirming": true,
+            "volume_trend": "Stable",
+            "signal": 0,
+            "description": "Volume data unavailable",
+            "current_volume": 0,
+            "average_volume": 0
+          },
+          "profile": {
+            "volume_trend": "Insufficient Data",
+            "current_volume": 0,
+            "avg_volume": 0,
+            "volume_spike": false,
+            "volume_increasing": false,
+            "on_balance_volume": 0,
+            "obv_trend": "Neutral",
+            "signal": 0,
+            "confidence": "Low"
+          }
+        },
+        "trend": {
+          "strength": 5,
+          "direction": "Neutral",
+          "description": "Insufficient data",
+          "quality": {
+            "status": "degraded",
+            "reason": "insufficient daily candles"
+          }
+        },
+        "open_interest": {
+          "trend": "Unavailable",
+          "price_direction": "Unknown",
+          "change_pct": null,
+          "score": 0
+        },
+        "funding": {
+          "state": "Unavailable",
+          "rate": null,
+          "score": 0
+        }
+      },
+      "signal": null,
+      "changed": false,
+      "previous_sentiment": "CONSOLIDATION"
     }
   ],
   "indicators": {
     "early_reversal": {
       "rsi_divergence": 0,
       "macd_divergence": 0,
-      "whale_activity": -1,
+      "whale_activity": 0,
       "structure_break": 0,
-      "total": -1
+      "total": 0
     },
     "confirmatory": {
       "fear_greed": 1,
@@ -173,7 +248,22 @@
     "trend": {
       "strength": 5,
       "direction": "Neutral",
-      "description": "Insufficient data"
+      "description": "Insufficient data",
+      "quality": {
+        "status": "degraded",
+        "reason": "insufficient daily candles"
+      }
+    },
+    "open_interest": {
+      "trend": "Unavailable",
+      "price_direction": "Unknown",
+      "change_pct": null,
+      "score": 0
+    },
+    "funding": {
+      "state": "Unavailable",
+      "rate": null,
+      "score": 0
     }
   },
   "signal": null,
