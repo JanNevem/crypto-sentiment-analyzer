@@ -31,8 +31,10 @@ class VolumeAnalyzer:
                 'limit': 30  # Get last 30 days
             }
             
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, params=params, headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'}, timeout=10)
             klines = response.json()
+            if not isinstance(klines, list) or any(not isinstance(row, list) or len(row) < 8 for row in klines):
+                return self._get_default_volume()
             
             if not klines or len(klines) < 5:
                 return {

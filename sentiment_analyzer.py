@@ -47,6 +47,23 @@ class SentimentAnalyzer:
         self.price_history = []
         self.rsi_history = []
         self.macd_history = []
+        self.data_quality = {}
+
+    @staticmethod
+    def _fetch_klines(interval: str, limit: int, futures: bool = False) -> list:
+        """Fetch validated Binance candles or raise a data-source error."""
+        base = 'https://fapi.binance.com/fapi/v1/klines' if futures else 'https://api.binance.com/api/v3/klines'
+        response = requests.get(
+            base,
+            params={'symbol': 'BTCUSDT', 'interval': interval, 'limit': limit},
+            headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'},
+            timeout=10,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        if not isinstance(payload, list) or len(payload) < 2 or any(not isinstance(row, list) or len(row) < 8 for row in payload):
+            raise ValueError(f'Binance returned an invalid {interval} kline payload')
+        return payload
     
     # ==================== EARLY REVERSAL INDICATORS ====================
     # (Leading indicators - predict change)
@@ -61,8 +78,7 @@ class SentimentAnalyzer:
                 'limit': 120
             }
             
-            response = requests.get(url, params=params, timeout=5)
-            klines = response.json()
+            klines = self._fetch_klines('1d', 120)
             closes = [float(k[4]) for k in klines]
             
             if len(closes) < 40:
@@ -116,8 +132,7 @@ class SentimentAnalyzer:
                 'limit': 100
             }
             
-            response = requests.get(url, params=params, timeout=5)
-            klines = response.json()
+            klines = self._fetch_klines('1d', 100)
             closes = [float(k[4]) for k in klines]
             
             if len(closes) < 35:
@@ -184,12 +199,7 @@ class SentimentAnalyzer:
     def get_trend_strength(self) -> Dict:
         """[CONFIRM] Combine ATR-normalized momentum with directional ADX."""
         try:
-            response = requests.get(
-                "https://api.binance.com/api/v3/klines",
-                params={'symbol': 'BTCUSDT', 'interval': '1d', 'limit': 100},
-                timeout=5,
-            )
-            rows = response.json()
+            rows = self._fetch_klines('1d', 100)
             if len(rows) < 35:
                 return {'strength': 5, 'direction': 'Neutral', 'description': 'Insufficient data', 'quality': {'status': 'degraded', 'reason': 'insufficient daily candles'}}
             highs = np.array([float(row[2]) for row in rows])
@@ -254,8 +264,7 @@ class SentimentAnalyzer:
                 'limit': 20
             }
             
-            response = requests.get(url, params=params, timeout=5)
-            klines = response.json()
+            klines = self._fetch_klines('1d', 20)
             
             closes = [float(k[4]) for k in klines]
             current_price = closes[-1]
@@ -289,8 +298,12 @@ class SentimentAnalyzer:
             url = "https://fapi.binance.com/fapi/v1/openInterest"
             params = {'symbol': 'BTCUSDT'}
             
-            response = requests.get(url, params=params, timeout=5)
-            current_oi = float(response.json()['openInterest'])
+            response = requests.get(url, params=params, headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'}, timeout=10)
+            response.raise_for_status()
+            oi_payload = response.json()
+            if not isinstance(oi_payload, dict) or 'openInterest' not in oi_payload:
+                raise ValueError('Binance returned an invalid open-interest payload')
+            current_oi = float(oi_payload['openInterest'])
             
             cache_file = "oi_cache.json"
             if os.path.exists(cache_file):
@@ -304,12 +317,7 @@ class SentimentAnalyzer:
                 json.dump({'last_oi': current_oi}, f)
             
             oi_change = (current_oi / previous_oi - 1) if previous_oi else 0
-            price_response = requests.get(
-                "https://api.binance.com/api/v3/klines",
-                params={'symbol': 'BTCUSDT', 'interval': '4h', 'limit': 2},
-                timeout=5
-            )
-            price_rows = price_response.json()
+            price_rows = self._fetch_klines('4h', 2)
             price_change = float(price_rows[-1][4]) / float(price_rows[-2][4]) - 1 if len(price_rows) >= 2 else 0
             oi_direction = "Increasing" if oi_change >= 0.05 else "Decreasing" if oi_change <= -0.05 else "Stable"
             price_direction = "Up" if price_change > 0 else "Down" if price_change < 0 else "Flat"
@@ -327,8 +335,12 @@ class SentimentAnalyzer:
             url = "https://fapi.binance.com/fapi/v1/fundingRate"
             params = {'symbol': 'BTCUSDT', 'limit': 1}
             
-            response = requests.get(url, params=params, timeout=5)
-            rate = float(response.json()[0]['fundingRate'])
+            response = requests.get(url, params=params, headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'}, timeout=10)
+            response.raise_for_status()
+            funding_payload = response.json()
+            if not isinstance(funding_payload, list) or not funding_payload or 'fundingRate' not in funding_payload[0]:
+                raise ValueError('Binance returned an invalid funding payload')
+            rate = float(funding_payload[0]['fundingRate'])
             
             score = -2 if rate > 0.0005 else 2 if rate < -0.0005 else 0
             return {'state': 'Positive' if rate > 0.0005 else 'Negative' if rate < -0.0005 else 'Neutral', 'rate': rate, 'score': score}

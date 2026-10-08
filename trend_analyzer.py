@@ -101,12 +101,14 @@ class TrendAnalyzer:
                 'limit': 24
             }
             
-            response = requests.get(url, params=params, timeout=5)
+            response = requests.get(url, params=params, headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'}, timeout=10)
             
             if response.status_code != 200:
                 return self._get_default_volume()
             
             klines = response.json()
+            if not isinstance(klines, list) or any(not isinstance(row, list) or len(row) < 8 for row in klines):
+                return self._get_default_volume()
             
             if len(klines) < 2:
                 return self._get_default_volume()

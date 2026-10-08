@@ -31,8 +31,11 @@ class StructureAnalyzer:
                 'limit': 50  # Get last 50 4-hour candles
             }
             
-            response = requests.get(url, params=params, timeout=10)
+            response = requests.get(url, params=params, headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'}, timeout=10)
+            response.raise_for_status()
             klines = response.json()
+            if not isinstance(klines, list) or any(not isinstance(row, list) or len(row) < 5 for row in klines):
+                raise ValueError('Binance returned an invalid structure kline payload')
             
             if not klines or len(klines) < 5:
                 return {
