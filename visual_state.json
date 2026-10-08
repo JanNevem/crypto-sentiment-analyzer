@@ -1,8 +1,8 @@
 {
   "slot_utc": "2026-10-08T16:00:00+00:00",
-  "timestamp": "2026-10-08T18:26:11.995934",
+  "timestamp": "2026-10-08T18:29:16.048587",
   "asset": "BTC",
-  "score": 0,
+  "score": -4,
   "max_score": 20,
   "sentiment": "CONSOLIDATION",
   "regime": "orange",
@@ -129,30 +129,30 @@
     },
     {
       "slot_utc": "2026-10-08T16:00:00+00:00",
-      "timestamp": "2026-10-08T18:26:11.995934",
+      "timestamp": "2026-10-08T18:29:16.048587",
       "asset": "BTC",
-      "score": 0,
+      "score": -4,
       "max_score": 20,
       "sentiment": "CONSOLIDATION",
       "regime": "orange",
       "indicators": {
         "early_reversal": {
           "rsi_divergence": 0,
-          "macd_divergence": 0,
+          "macd_divergence": -2,
           "whale_activity": 0,
-          "structure_break": 0,
-          "total": 0
+          "structure_break": -1,
+          "total": -3
         },
         "confirmatory": {
           "fear_greed": 1,
           "trend_strength": 0,
           "volume": 0,
           "bollinger_bands": 0,
-          "volume_profile": 0,
+          "volume_profile": -1,
           "open_interest": 0,
           "funding_rate": 0,
           "dollar_strength": -1,
-          "total": 0
+          "total": -1
         }
       },
       "metrics": {
@@ -161,41 +161,99 @@
             "confirming": true,
             "volume_trend": "Stable",
             "signal": 0,
-            "description": "Volume data unavailable",
-            "current_volume": 0,
-            "average_volume": 0
+            "description": "Volume is stable - Confirming trend",
+            "current_volume": 59600014.74,
+            "average_volume": 72494500.41
           },
           "profile": {
-            "volume_trend": "Error",
-            "current_volume": 0,
-            "avg_volume": 0,
+            "volume_trend": "Increasing Volume (Down)",
+            "current_volume": 1572258257.2384264,
+            "avg_volume": 1396617701.5634854,
             "volume_spike": false,
-            "volume_increasing": false,
-            "on_balance_volume": 0,
-            "obv_trend": "Neutral",
-            "signal": 0,
-            "confidence": "Low"
+            "volume_increasing": true,
+            "on_balance_volume": -3222163675.9163074,
+            "obv_trend": "Decreasing",
+            "signal": -1,
+            "confidence": "Medium",
+            "timestamp": "2026-10-08T18:29:14.586291"
           }
         },
         "trend": {
           "strength": 5,
           "direction": "Neutral",
-          "description": "Trend data unavailable",
+          "description": "ADX 40.0; +DI 26.3; -DI 22.8; momentum -1.46 ATR",
+          "adx": 40.02,
+          "plus_di": 26.27,
+          "minus_di": 22.84,
+          "atr": 2255.2,
+          "momentum_5d_atr": -1.46,
           "quality": {
-            "status": "unavailable",
-            "reason": "451 Client Error:  for url: https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=100"
+            "status": "available",
+            "source": "Binance BTCUSDT daily OHLCV",
+            "freshness": "daily"
           }
         },
         "open_interest": {
-          "trend": "Unavailable",
-          "price_direction": "Unknown",
-          "change_pct": null,
+          "trend": "Stable",
+          "price_direction": "Up",
+          "change_pct": -2.4,
           "score": 0
         },
         "funding": {
-          "state": "Unavailable",
-          "rate": null,
+          "state": "Neutral",
+          "rate": 3.445e-05,
           "score": 0
+        }
+      },
+      "data_quality": {
+        "rsi_divergence": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV"
+        },
+        "macd_momentum": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV"
+        },
+        "whale_activity": {
+          "status": "unavailable",
+          "source": "No configured on-chain provider"
+        },
+        "structure_break": {
+          "status": "available",
+          "source": "Binance BTCUSDT 4H OHLCV"
+        },
+        "fear_greed": {
+          "status": "available",
+          "source": "Alternative.me"
+        },
+        "trend_strength": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV",
+          "freshness": "daily"
+        },
+        "volume_confirmation": {
+          "status": "available",
+          "role": "context_only"
+        },
+        "bollinger_bands": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV"
+        },
+        "volume_profile": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV"
+        },
+        "open_interest": {
+          "status": "available",
+          "source": "Binance Futures + 4H price context"
+        },
+        "funding_rate": {
+          "status": "available",
+          "source": "Binance Futures"
+        },
+        "dollar_strength": {
+          "status": "available",
+          "source": "Federal Reserve FRED DTWEXBGS"
         }
       },
       "signal": null,
@@ -206,21 +264,21 @@
   "indicators": {
     "early_reversal": {
       "rsi_divergence": 0,
-      "macd_divergence": 0,
+      "macd_divergence": -2,
       "whale_activity": 0,
-      "structure_break": 0,
-      "total": 0
+      "structure_break": -1,
+      "total": -3
     },
     "confirmatory": {
       "fear_greed": 1,
       "trend_strength": 0,
       "volume": 0,
       "bollinger_bands": 0,
-      "volume_profile": 0,
+      "volume_profile": -1,
       "open_interest": 0,
       "funding_rate": 0,
       "dollar_strength": -1,
-      "total": 0
+      "total": -1
     }
   },
   "metrics": {
@@ -229,44 +287,102 @@
         "confirming": true,
         "volume_trend": "Stable",
         "signal": 0,
-        "description": "Volume data unavailable",
-        "current_volume": 0,
-        "average_volume": 0
+        "description": "Volume is stable - Confirming trend",
+        "current_volume": 59600014.74,
+        "average_volume": 72494500.41
       },
       "profile": {
-        "volume_trend": "Error",
-        "current_volume": 0,
-        "avg_volume": 0,
+        "volume_trend": "Increasing Volume (Down)",
+        "current_volume": 1572258257.2384264,
+        "avg_volume": 1396617701.5634854,
         "volume_spike": false,
-        "volume_increasing": false,
-        "on_balance_volume": 0,
-        "obv_trend": "Neutral",
-        "signal": 0,
-        "confidence": "Low"
+        "volume_increasing": true,
+        "on_balance_volume": -3222163675.9163074,
+        "obv_trend": "Decreasing",
+        "signal": -1,
+        "confidence": "Medium",
+        "timestamp": "2026-10-08T18:29:14.586291"
       }
     },
     "trend": {
       "strength": 5,
       "direction": "Neutral",
-      "description": "Trend data unavailable",
+      "description": "ADX 40.0; +DI 26.3; -DI 22.8; momentum -1.46 ATR",
+      "adx": 40.02,
+      "plus_di": 26.27,
+      "minus_di": 22.84,
+      "atr": 2255.2,
+      "momentum_5d_atr": -1.46,
       "quality": {
-        "status": "unavailable",
-        "reason": "451 Client Error:  for url: https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1d&limit=100"
+        "status": "available",
+        "source": "Binance BTCUSDT daily OHLCV",
+        "freshness": "daily"
       }
     },
     "open_interest": {
-      "trend": "Unavailable",
-      "price_direction": "Unknown",
-      "change_pct": null,
+      "trend": "Stable",
+      "price_direction": "Up",
+      "change_pct": -2.4,
       "score": 0
     },
     "funding": {
-      "state": "Unavailable",
-      "rate": null,
+      "state": "Neutral",
+      "rate": 3.445e-05,
       "score": 0
     }
   },
   "signal": null,
   "changed": false,
-  "previous_sentiment": "CONSOLIDATION"
+  "previous_sentiment": "CONSOLIDATION",
+  "data_quality": {
+    "rsi_divergence": {
+      "status": "available",
+      "source": "Binance BTCUSDT daily OHLCV"
+    },
+    "macd_momentum": {
+      "status": "available",
+      "source": "Binance BTCUSDT daily OHLCV"
+    },
+    "whale_activity": {
+      "status": "unavailable",
+      "source": "No configured on-chain provider"
+    },
+    "structure_break": {
+      "status": "available",
+      "source": "Binance BTCUSDT 4H OHLCV"
+    },
+    "fear_greed": {
+      "status": "available",
+      "source": "Alternative.me"
+    },
+    "trend_strength": {
+      "status": "available",
+      "source": "Binance BTCUSDT daily OHLCV",
+      "freshness": "daily"
+    },
+    "volume_confirmation": {
+      "status": "available",
+      "role": "context_only"
+    },
+    "bollinger_bands": {
+      "status": "available",
+      "source": "Binance BTCUSDT daily OHLCV"
+    },
+    "volume_profile": {
+      "status": "available",
+      "source": "Binance BTCUSDT daily OHLCV"
+    },
+    "open_interest": {
+      "status": "available",
+      "source": "Binance Futures + 4H price context"
+    },
+    "funding_rate": {
+      "status": "available",
+      "source": "Binance Futures"
+    },
+    "dollar_strength": {
+      "status": "available",
+      "source": "Federal Reserve FRED DTWEXBGS"
+    }
+  }
 }
