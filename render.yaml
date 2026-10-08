@@ -9,3 +9,6 @@ services:
     startCommand: gunicorn --bind 0.0.0.0:$PORT dashboard_server:app
     healthCheckPath: /health
     autoDeploy: yes
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
