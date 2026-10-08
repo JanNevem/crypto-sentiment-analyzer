@@ -24,7 +24,7 @@ class StructureAnalyzer:
         """
         try:
             # Fetch recent 4-hour candles for structure analysis
-            url = "https://api.binance.com/api/v3/klines"
+            url = "https://data-api.binance.vision/api/v3/klines"
             params = {
                 'symbol': 'BTCUSDT',
                 'interval': '4h',

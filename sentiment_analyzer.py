@@ -52,7 +52,7 @@ class SentimentAnalyzer:
     @staticmethod
     def _fetch_klines(interval: str, limit: int, futures: bool = False) -> list:
         """Fetch validated Binance candles or raise a data-source error."""
-        base = 'https://fapi.binance.com/fapi/v1/klines' if futures else 'https://api.binance.com/api/v3/klines'
+        base = 'https://fapi.binance.com/fapi/v1/klines' if futures else 'https://data-api.binance.vision/api/v3/klines'
         response = requests.get(
             base,
             params={'symbol': 'BTCUSDT', 'interval': interval, 'limit': limit},
@@ -295,7 +295,7 @@ class SentimentAnalyzer:
     def get_open_interest_trend(self) -> Dict:
         """[CONFIRM] Score open interest only in combination with price direction."""
         try:
-            url = "https://fapi.binance.com/fapi/v1/openInterest"
+            url = "https://www.binance.com/fapi/v1/openInterest"
             params = {'symbol': 'BTCUSDT'}
             
             response = requests.get(url, params=params, headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'}, timeout=10)
@@ -332,7 +332,7 @@ class SentimentAnalyzer:
     def get_funding_rate(self) -> Dict:
         """[CONFIRM] Fetch funding and score crowded positioning contrarianly."""
         try:
-            url = "https://fapi.binance.com/fapi/v1/fundingRate"
+            url = "https://www.binance.com/fapi/v1/fundingRate"
             params = {'symbol': 'BTCUSDT', 'limit': 1}
             
             response = requests.get(url, params=params, headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'}, timeout=10)

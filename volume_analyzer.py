@@ -24,7 +24,7 @@ class VolumeAnalyzer:
         """
         try:
             # Fetch recent daily candles for volume analysis
-            url = "https://api.binance.com/api/v3/klines"
+            url = "https://data-api.binance.vision/api/v3/klines"
             params = {
                 'symbol': 'BTCUSDT',
                 'interval': '1d',
@@ -34,7 +34,11 @@ class VolumeAnalyzer:
             response = requests.get(url, params=params, headers={'User-Agent': 'BTC-Sentiment-Analyzer/1.0'}, timeout=10)
             klines = response.json()
             if not isinstance(klines, list) or any(not isinstance(row, list) or len(row) < 8 for row in klines):
-                return self._get_default_volume()
+                return {
+                    'volume_trend': 'Unavailable', 'current_volume': 0, 'avg_volume': 0,
+                    'volume_spike': False, 'volume_increasing': False, 'on_balance_volume': 0,
+                    'obv_trend': 'Neutral', 'signal': 0, 'confidence': 'Low'
+                }
             
             if not klines or len(klines) < 5:
                 return {

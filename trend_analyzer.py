@@ -11,7 +11,7 @@ class TrendAnalyzer:
     
     def __init__(self):
         self.symbol = "BTCUSDT"
-        self.base_url = "https://api.binance.com/api/v3"
+        self.base_url = "https://data-api.binance.vision/api/v3"
     
     def get_trend_strength(self, price_history, rsi, macd_line, signal_line):
         """

@@ -48,6 +48,7 @@ def _snapshot_point(result, now, slot):
         "regime": _regime(result["sentiment"]),
         "indicators": result.get("indicators", {}),
         "metrics": result.get("metrics", {}),
+        "data_quality": result.get("data_quality", {}),
         "signal": result.get("signal"),
         "changed": result.get("changed", False),
         "previous_sentiment": result.get("previous_sentiment"),
