@@ -146,7 +146,7 @@ def _sentiment_for_slot(slot: str | None, history: list[dict[str, Any]], latest:
 
 def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:
     """Fetch closed BTCUSDT 4H candles for a read-only confirmation view."""
-    query = urlencode({"symbol": "BTCUSDT", "interval": "4h", "limit": 90})
+    query = urlencode({"symbol": "BTCUSDT", "interval": "4h", "limit": 180})
     request = Request(f"{BINANCE_KLINES_URL}?{query}", headers={"User-Agent": "BTC-Sentiment-Dashboard/1.0"})
     try:
         with urlopen(request, timeout=8) as response:
