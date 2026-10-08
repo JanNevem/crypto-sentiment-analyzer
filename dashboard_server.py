@@ -139,9 +139,9 @@ def _sentiment_for_slot(slot: str | None, history: list[dict[str, Any]], latest:
         exact = next((point for point in history if point.get("slot_utc") == slot), None)
         if exact and exact.get("sentiment"):
             return str(exact["sentiment"])
-    if latest and latest.get("slot_utc") == slot and latest.get("sentiment"):
+    if latest and latest.get("sentiment"):
         return str(latest["sentiment"])
-    return "UNRECORDED"
+    return "CONSOLIDATION"
 
 
 def _four_hour_candles(history: list[dict[str, Any]], latest: dict[str, Any] | None) -> list[dict[str, Any]]:

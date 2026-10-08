@@ -31,10 +31,10 @@
 
   const sentimentFill = (sentiment) => {
     const value = String(sentiment || "CONSOLIDATION");
-    if (value.includes("BULLISH")) return "rgba(99,223,161,.12)";
-    if (value.includes("BEARISH")) return "rgba(255,126,129,.12)";
-    if (value === "UNRECORDED") return "rgba(154,173,184,.035)";
-    return "rgba(255,180,84,.10)";
+    if (value.includes("BULLISH")) return "rgba(99,223,161,.24)";
+    if (value.includes("BEARISH")) return "rgba(255,126,129,.24)";
+    if (value === "UNRECORDED") return "rgba(154,173,184,.08)";
+    return "rgba(255,180,84,.24)";
   };
 
   const sentimentBandsPlugin = {
@@ -69,7 +69,7 @@
     if (candleChart) candleChart.destroy();
     candleChart = new Chart($("#candle-chart"), {
       type: "candlestick",
-      data: { datasets: [{ label: "BTCUSDT / 4H", data: candles, color: { up: "#050505", down: "#050505", unchanged: "#050505" }, borderColor: { up: "#050505", down: "#050505", unchanged: "#050505" }, barThickness: 3 }] },
+      data: { datasets: [{ label: "BTCUSDT / 4H", data: candles, backgroundColors: { up: "#000000", down: "#000000", unchanged: "#000000" }, borderColors: { up: "#000000", down: "#000000", unchanged: "#000000" }, barThickness: 3 }] },
       plugins: [sentimentBandsPlugin],
       options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "none" }, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { type: "time", time: { unit: "day", displayFormats: { day: "MMM d" } }, ticks: { color: "#9aadb8", maxTicksLimit: 10 }, grid: { color: "rgba(45,65,79,.45)" } }, y: { ticks: { color: "#9aadb8", callback: (value) => `$${Number(value).toLocaleString()}` }, grid: { color: "rgba(45,65,79,.45)" } } } }
     });
