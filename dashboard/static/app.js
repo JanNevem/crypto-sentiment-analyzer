@@ -71,7 +71,7 @@
     if (candleChart) candleChart.destroy();
     candleChart = new Chart($("#candle-chart"), {
       type: "candlestick",
-      data: { datasets: [{ label: "BTCUSDT / 4H", data: candles, backgroundColors: { up: "#2b3138", down: "#2b3138", unchanged: "#2b3138" }, borderColors: { up: "#2b3138", down: "#2b3138", unchanged: "#2b3138" }, barThickness: 3 }] },
+      data: { datasets: [{ label: "BTCUSDT / 4H", data: candles, backgroundColors: { up: "#7c858e", down: "#7c858e", unchanged: "#7c858e" }, borderColors: { up: "#7c858e", down: "#7c858e", unchanged: "#7c858e" }, borderWidth: 1, barThickness: 4 }] },
       plugins: [sentimentBandsPlugin],
       options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: "none" }, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { type: "time", time: { unit: "day", displayFormats: { day: "MMM d" } }, ticks: { color: "#9aadb8", maxTicksLimit: 10 }, grid: { color: "rgba(45,65,79,.45)" } }, y: { ticks: { color: "#9aadb8", callback: (value) => `$${Number(value).toLocaleString()}` }, grid: { color: "rgba(45,65,79,.45)" } } } }
     });
