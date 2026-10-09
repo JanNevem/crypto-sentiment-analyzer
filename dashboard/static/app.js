@@ -7,13 +7,14 @@
   const dateText = (value) => { if (!value) return "—"; const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString(); };
   const shortDate = (value) => { if (!value) return "—"; const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString([], {month:"short", day:"numeric", hour:"numeric"}); };
   const groupLabel = (value) => String(value ?? "").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const indicatorLabel = (value) => ({macd_divergence:"MACD Momentum", rsi_divergence:"RSI Divergence", fear_greed:"Fear & Greed", open_interest:"Open Interest", funding_rate:"Funding Rate", dollar_strength:"Dollar Strength", volume_profile:"Volume Profile", trend_strength:"Trend Strength", structure_break:"Structure Break", whale_activity:"Whale Activity", bollinger_bands:"Bollinger Bands", volume:"Volume (context only)"}[value] || groupLabel(value));
 
   function renderOverview(payload) {
     const latest = payload.latest;
     const meta = payload.meta || {};
     const hasScore = latest && latest.score !== null && latest.score !== undefined;
     const score = hasScore ? Number(latest.score) : 0;
-    const maxScore = Number(latest?.max_score || 24);
+    const maxScore = Number(latest?.max_score || 20);
     $("#score").textContent = hasScore ? signed(score) : "—";
     $("#score-max").textContent = `/ ${maxScore}`;
     $("#score-note").textContent = hasScore ? `${Math.abs(score)} points from neutral` : "Waiting for an analyzer snapshot.";
@@ -98,12 +99,12 @@
     $("#trend-stats").innerHTML = [["Direction", trend.direction || "—"], ["Average", signed(trend.average_score)], ["High", signed(trend.high_score)], ["Low", signed(trend.low_score)], ["Positive", trend.positive_points ?? "—"], ["Negative", trend.negative_points ?? "—"]].map(([label, value]) => `<div class="trend-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
   }
 
-  function renderIndicators(groups) {
+  function renderIndicators(groups, quality = {}) {
     const container = $("#indicator-groups");
     const count = groups.reduce((total, group) => total + (group.indicators || []).length, 0);
     $("#indicator-count").textContent = `${count} feed${count === 1 ? "" : "s"}`;
     if (!groups.length) { container.innerHTML = '<p class="empty">Indicator details appear when the analyzer writes them.</p>'; return; }
-    container.innerHTML = groups.map((group) => `<section class="indicator-group"><div class="indicator-group-head"><h3>${escapeHtml(group.label)}</h3><span class="muted">${escapeHtml(signed(group.total))} / ${escapeHtml(group.max_score)}</span></div><div class="indicator-list">${(group.indicators || []).map((indicator) => { const score = Number(indicator.score) || 0; const kind = score > 0 ? "pos" : score < 0 ? "neg" : "zero"; return `<div><div class="indicator-line"><span class="indicator-label">${escapeHtml(indicator.label)}</span><span class="indicator-score ${kind}">${escapeHtml(signed(score))}</span></div><div class="bar ${kind}"><span style="width:${Math.max(4, Math.abs(score) / 2 * 100)}%"></span></div></div>`; }).join("")}</div></section>`).join("");
+    container.innerHTML = groups.map((group) => `<section class="indicator-group"><div class="indicator-group-head"><h3>${escapeHtml(group.label)}</h3><span class="muted">${escapeHtml(signed(group.total))} / ${escapeHtml(group.max_score)}</span></div><div class="indicator-list">${(group.indicators || []).map((indicator) => { const score = Number(indicator.score) || 0; const kind = score > 0 ? "pos" : score < 0 ? "neg" : "zero"; const status = quality[indicator.key]?.status || (indicator.key === "macd_divergence" ? quality.macd_momentum?.status : ""); return `<div><div class="indicator-line"><span class="indicator-label">${escapeHtml(indicatorLabel(indicator.key))}${status === "unavailable" ? " · unavailable" : ""}</span><span class="indicator-score ${kind}">${escapeHtml(signed(score))}</span></div><div class="bar ${kind}"><span style="width:${Math.max(4, Math.abs(score) / 2 * 100)}%"></span></div></div>`; }).join("")}</div></section>`).join("");
   }
 
   function renderSignals(signals) {
@@ -117,7 +118,7 @@
       const response = await fetch(`/api/dashboard?ts=${Date.now()}`, {cache: "no-store"});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
-      renderOverview(payload); renderChart(payload.candles || [], payload.history || []); renderAnalytics(payload.analytics || {}); renderIndicators(payload.latest?.indicators || []); renderSignals(payload.signals || []);
+      renderOverview(payload); renderChart(payload.candles || [], payload.history || []); renderAnalytics(payload.analytics || {}); renderIndicators(payload.latest?.indicators || [], payload.latest?.data_quality || {}); renderSignals(payload.signals || []);
       $("#connection-status").textContent = "Live"; $(".live-dot").className = "live-dot live"; $("#data-status").textContent = `Loaded ${payload.meta.history_count || 0} persisted point${payload.meta.history_count === 1 ? "" : "s"}`; $("#updated").textContent = `Updated ${dateText(payload.meta.refreshed_at)}`;
     } catch (error) { $("#connection-status").textContent = "Unavailable"; $(".live-dot").className = "live-dot error"; $("#data-status").textContent = `Dashboard error: ${error.message}`; }
   }

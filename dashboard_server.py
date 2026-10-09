@@ -19,7 +19,7 @@ VISUAL_STATE_FILE = Path(os.getenv("VISUAL_STATE_FILE", str(BASE_DIR / "visual_s
 SIGNAL_HISTORY_FILE = Path(os.getenv("SIGNAL_HISTORY_FILE", str(BASE_DIR / "signal_history.json")))
 
 app = Flask(__name__, template_folder="dashboard/templates", static_folder="dashboard/static")
-BINANCE_KLINES_URL = "https://api.binance.com/api/v3/klines"
+BINANCE_KLINES_URL = "https://data-api.binance.vision/api/v3/klines"
 CANDLE_CACHE: list[dict[str, Any]] = []
 
 
@@ -257,7 +257,30 @@ def _daily_candles() -> list[dict[str, Any]]:
             continue
     closed = [candle for candle in candles if candle["closed"]]
     if closed:
-        CANDLE_CACHE = _daily_regimes(closed)
+        regimes = _daily_regimes(closed)
+        # The daily classifier is intentionally slow and can preserve an old
+        # trend through a sharp move. For the freshest completed candle, use
+        # the analyzer snapshot when it is recent so the chart cannot show a
+        # green zone while the cockpit says CONSOLIDATION or BEARISH.
+        snapshot = _read_json(VISUAL_STATE_FILE, {})
+        sentiment = str(snapshot.get("sentiment", "")).upper() if isinstance(snapshot, dict) else ""
+        timestamp = snapshot.get("timestamp") if isinstance(snapshot, dict) else None
+        try:
+            snapshot_time = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
+            if snapshot_time.tzinfo is None:
+                snapshot_time = snapshot_time.replace(tzinfo=timezone.utc)
+            snapshot_age = (datetime.now(timezone.utc) - snapshot_time).total_seconds()
+        except (TypeError, ValueError):
+            snapshot_age = float("inf")
+        if regimes and sentiment in {"BULLISH", "ULTRA BULLISH", "BEARISH", "ULTRA BEARISH", "CONSOLIDATION"} and snapshot_age <= 48 * 3600:
+            mapped = "BULLISH" if "BULLISH" in sentiment else "BEARISH" if "BEARISH" in sentiment else "UNCERTAIN"
+            regimes[-1] = {
+                **regimes[-1],
+                "regime": mapped,
+                "regime_source": "ANALYZER_SNAPSHOT",
+                "confirmation": {**regimes[-1].get("confirmation", {}), "analyzer_sentiment": sentiment, "snapshot_age_hours": round(snapshot_age / 3600, 1)},
+            }
+        CANDLE_CACHE = regimes
     return CANDLE_CACHE
 
 
@@ -283,6 +306,7 @@ def dashboard_payload() -> dict[str, Any]:
             "regime": state.get("regime", "orange"),
             "indicators": _indicator_groups(state.get("indicators")),
             "metrics": state.get("metrics", {}),
+            "data_quality": state.get("data_quality", {}),
             "market_context": state.get("market_context", {}),
             "signal": state.get("signal"),
         }
