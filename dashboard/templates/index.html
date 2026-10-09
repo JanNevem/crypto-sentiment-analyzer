@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b1117">
-  <title>BTC Sentiment / Signal Cockpit</title>
+  <title>BTC Sentiment / Spot Decision Cockpit</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/luxon@3.5.0/build/global/luxon.min.js" defer></script>
@@ -15,7 +15,7 @@
 <body>
   <a class="skip-link" href="#main">Skip to dashboard</a>
   <header class="masthead">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">₿</span><div><p class="eyebrow">Crypto Sentiment Analyzer</p><h1>BTC <span>/</span> Signal Cockpit</h1></div></div>
+    <div class="brand"><span class="brand-mark" aria-hidden="true">₿</span><div><p class="eyebrow">Crypto Sentiment Analyzer</p><h1>BTC <span>/</span> Spot Decision Cockpit</h1></div></div>
     <div class="toolbar"><span class="live-dot" aria-hidden="true"></span><span id="connection-status" role="status">Connecting</span><button id="refresh-now" type="button">Refresh now</button></div>
   </header>
   <main id="main" class="shell">
@@ -24,6 +24,11 @@
       <article class="card score-card"><p class="eyebrow">Latest score</p><div><strong id="score">—</strong><span id="score-max">/ 20</span></div><div class="score-track" aria-hidden="true"><span id="score-marker"></span></div><p id="score-note" class="muted">Waiting for an analyzer snapshot.</p></article>
       <article class="card"><p class="eyebrow">Market regime</p><h2 id="sentiment" class="sentiment neutral">No snapshot</h2><p id="sentiment-note" class="muted">The dashboard reads visual_state.json.</p></article>
       <article class="card"><p class="eyebrow">Last observation</p><h2 id="timestamp">—</h2><dl class="facts"><div><dt>UTC slot</dt><dd id="slot">—</dd></div><div><dt>History</dt><dd id="history-count">0 points</dd></div></dl></article>
+    </section>
+
+    <section class="card guidance-card" aria-labelledby="guidance-heading">
+      <div class="section-heading"><div><p class="eyebrow">Spot-market guidance</p><h2 id="guidance-heading">Accumulation posture</h2></div><span class="muted">Non-leveraged context · no short-term trade calls</span></div>
+      <div id="spot-guidance" class="spot-guidance"><p class="empty">Loading spot guidance…</p></div>
     </section>
 
     <section class="card chart-card" aria-labelledby="history-heading">
@@ -41,7 +46,7 @@
 
     <div class="two-column">
       <section class="card" aria-labelledby="indicator-heading"><div class="section-heading"><div><p class="eyebrow">Evidence ledger</p><h2 id="indicator-heading">Indicator contributions</h2></div><span id="indicator-count" class="muted">0 feeds</span></div><div id="indicator-groups" class="indicator-groups"><p class="empty">Indicator details appear when the analyzer writes them.</p></div></section>
-      <section class="card" aria-labelledby="signal-heading"><div class="section-heading"><div><p class="eyebrow">Alert trail</p><h2 id="signal-heading">Recent signals</h2></div></div><div class="table-wrap"><table><caption class="sr-only">Recent generated signals</caption><thead><tr><th>Time</th><th>Signal</th><th>Direction</th></tr></thead><tbody id="signal-table"></tbody></table></div><p id="signal-empty" class="empty">No generated signals persisted yet.</p></section>
+      <section class="card" aria-labelledby="evidence-heading"><div class="section-heading"><div><p class="eyebrow">Decision context</p><h2 id="evidence-heading">How to use this view</h2></div></div><ul class="guidance-list"><li><strong>Bullish:</strong> favor gradual spot accumulation on pullbacks, not chasing vertical moves.</li><li><strong>Consolidation:</strong> wait for support or scale slowly with small staggered purchases.</li><li><strong>Bearish:</strong> avoid aggressive new buys and prioritize capital preservation.</li><li>Use the indicator ledger as evidence, not as an automatic buy or sell instruction.</li></ul></section>
     </div>
 
     <section id="empty-state" class="empty-panel" hidden><p class="eyebrow">Awaiting analyzer state</p><h2>No visual snapshot has been persisted.</h2><p>Run <code>python main.py --once</code> or let the scheduled workflow produce the next state file.</p></section>

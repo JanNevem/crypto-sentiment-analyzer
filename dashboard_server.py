@@ -128,6 +128,51 @@ def _historical_trend(history: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _spot_guidance(latest: dict[str, Any] | None, candles: list[dict[str, Any]]) -> dict[str, Any]:
+    """Translate sentiment evidence into non-leveraged spot decision support."""
+    latest = latest if isinstance(latest, dict) else {}
+    sentiment = str(latest.get("sentiment", "CONSOLIDATION")).upper()
+    score = _decimal(latest.get("score"))
+    current = _decimal(candles[-1].get("c")) if candles else 0.0
+    recent = candles[-30:] if candles else []
+    lows = sorted(_decimal(item.get("l")) for item in recent if _decimal(item.get("l")) > 0)
+    highs = sorted((_decimal(item.get("h")) for item in recent if _decimal(item.get("h")) > 0))
+    support = lows[max(0, int(len(lows) * 0.2) - 1)] if lows else 0.0
+    resistance = highs[min(len(highs) - 1, int(len(highs) * 0.8))] if highs else 0.0
+    metrics = latest.get("metrics", {}) if isinstance(latest.get("metrics"), dict) else {}
+    trend = metrics.get("trend", {}) if isinstance(metrics.get("trend"), dict) else {}
+    confirmation = candles[-1].get("confirmation", {}) if candles else {}
+    ema20 = _decimal(confirmation.get("ema20"))
+    ema50 = _decimal(confirmation.get("ema50"))
+    if sentiment in {"ULTRA BULLISH", "BULLISH"}:
+        posture, label = "ACCUMULATE_ON_PULLBACKS", "Accumulate on pullbacks"
+        rationale = "The sentiment regime is constructive; favor gradual spot buying near support rather than chasing strength."
+    elif sentiment in {"ULTRA BEARISH", "BEARISH"}:
+        posture, label = "DEFENSIVE_WAIT", "Defensive / wait"
+        rationale = "The sentiment regime is weak; avoid aggressive new spot buys and prioritize capital preservation."
+    else:
+        posture, label = "WAIT_OR_SCALE_SLOWLY", "Wait or scale slowly"
+        rationale = "Evidence is mixed; wait for support and clearer confirmation, or use only small staggered spot purchases."
+    zones = []
+    if support:
+        zones.append({"name": "Value / support zone", "low": round(support * 0.985, 2), "high": round(support * 1.015, 2), "basis": "20th percentile of the last 30 daily lows"})
+    if ema20 and ema50:
+        low, high = sorted((ema20, ema50))
+        zones.append({"name": "Trend-retest zone", "low": round(low, 2), "high": round(high, 2), "basis": "Daily EMA20–EMA50 area"})
+    return {
+        "posture": posture,
+        "label": label,
+        "rationale": rationale,
+        "current_price": current,
+        "accumulation_zones": zones,
+        "resistance_reference": round(resistance, 2) if resistance else None,
+        "invalidation_reference": round(support * 0.97, 2) if support else None,
+        "trend_direction": trend.get("direction", "Unknown"),
+        "score_context": score,
+        "disclaimer": "Spot-market context only — not a guaranteed entry, exit, or financial advice.",
+    }
+
+
 def _slot_from_ms(value: Any, daily: bool = False) -> str | None:
     try:
         stamp = datetime.fromtimestamp(int(value) / 1000, tz=timezone.utc)
@@ -316,6 +361,7 @@ def dashboard_payload() -> dict[str, Any]:
         "history": history[-180:],
         "candles": candles,
         "signals": signals[-20:],
+        "spot_guidance": _spot_guidance(latest, candles),
         "analytics": {
             "volume_breakdown": _volume_breakdown(state.get("metrics", {})),
             "historical_trend": _historical_trend(history),

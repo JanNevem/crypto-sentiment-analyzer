@@ -107,6 +107,15 @@
     container.innerHTML = groups.map((group) => `<section class="indicator-group"><div class="indicator-group-head"><h3>${escapeHtml(group.label)}</h3><span class="muted">${escapeHtml(signed(group.total))} / ${escapeHtml(group.max_score)}</span></div><div class="indicator-list">${(group.indicators || []).map((indicator) => { const score = Number(indicator.score) || 0; const kind = score > 0 ? "pos" : score < 0 ? "neg" : "zero"; const status = quality[indicator.key]?.status || (indicator.key === "macd_divergence" ? quality.macd_momentum?.status : ""); return `<div><div class="indicator-line"><span class="indicator-label">${escapeHtml(indicatorLabel(indicator.key))}${status === "unavailable" ? " · unavailable" : ""}</span><span class="indicator-score ${kind}">${escapeHtml(signed(score))}</span></div><div class="bar ${kind}"><span style="width:${Math.max(4, Math.abs(score) / 2 * 100)}%"></span></div></div>`; }).join("")}</div></section>`).join("");
   }
 
+  function renderSpotGuidance(guidance = {}) {
+    const container = $("#spot-guidance");
+    if (!container) return;
+    const posture = String(guidance.posture || "WAIT_OR_SCALE_SLOWLY").toLowerCase();
+    const zones = Array.isArray(guidance.accumulation_zones) ? guidance.accumulation_zones : [];
+    const money = (value) => value === null || value === undefined || !Number(value) ? "—" : `$${Number(value).toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+    container.innerHTML = `<div class="posture posture-${escapeHtml(posture)}"><span class="posture-label">Current posture</span><strong>${escapeHtml(guidance.label || "Wait or scale slowly")}</strong><p>${escapeHtml(guidance.rationale || "Evidence is mixed; wait for clearer confirmation.")}</p></div><div class="guidance-facts"><div><span>Current BTC</span><strong>${money(guidance.current_price)}</strong></div><div><span>Trend direction</span><strong>${escapeHtml(guidance.trend_direction || "Unknown")}</strong></div><div><span>Resistance reference</span><strong>${money(guidance.resistance_reference)}</strong></div><div><span>Invalidation reference</span><strong>${money(guidance.invalidation_reference)}</strong></div></div><div class="zones"><h3>Accumulation zones</h3>${zones.length ? zones.map((zone) => `<div class="zone"><div><strong>${escapeHtml(zone.name)}</strong><span>${escapeHtml(zone.basis)}</span></div><b>${money(zone.low)} – ${money(zone.high)}</b></div>`).join("") : '<p class="muted">No zone available until enough daily price data is present.</p>'}</div><p class="guidance-disclaimer">${escapeHtml(guidance.disclaimer || "Spot-market context only — not a guaranteed entry, exit, or financial advice.")}</p>`;
+  }
+
   function renderSignals(signals) {
     const rows = $("#signal-table");
     rows.innerHTML = signals.slice().reverse().map((signal) => `<tr><td>${escapeHtml(dateText(signal.timestamp))}</td><td>${escapeHtml(signal.type)}</td><td>${escapeHtml(signal.direction)}</td></tr>`).join("");
@@ -118,7 +127,7 @@
       const response = await fetch(`/api/dashboard?ts=${Date.now()}`, {cache: "no-store"});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
-      renderOverview(payload); renderChart(payload.candles || [], payload.history || []); renderAnalytics(payload.analytics || {}); renderIndicators(payload.latest?.indicators || [], payload.latest?.data_quality || {}); renderSignals(payload.signals || []);
+      renderOverview(payload); renderChart(payload.candles || [], payload.history || []); renderAnalytics(payload.analytics || {}); renderIndicators(payload.latest?.indicators || [], payload.latest?.data_quality || {}); renderSpotGuidance(payload.spot_guidance || {});
       $("#connection-status").textContent = "Live"; $(".live-dot").className = "live-dot live"; $("#data-status").textContent = `Loaded ${payload.meta.history_count || 0} persisted point${payload.meta.history_count === 1 ? "" : "s"}`; $("#updated").textContent = `Updated ${dateText(payload.meta.refreshed_at)}`;
     } catch (error) { $("#connection-status").textContent = "Unavailable"; $(".live-dot").className = "live-dot error"; $("#data-status").textContent = `Dashboard error: ${error.message}`; }
   }
