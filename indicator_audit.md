@@ -60,4 +60,6 @@ Use Fear & Greed, Bollinger context, real RSI divergence, and slow dollar streng
 
 ## Next calibration work
 
-The next work should use fresh persisted analyzer cycles to calibrate thresholds, not add more indicators immediately. We should inspect the distribution of ATR momentum, ADX, RSI/MACD signals, OI/funding states, unavailable feeds, and sentiment transitions over several days before changing weights or thresholds.
+The two-horizon price-only momentum component is now implemented inside the existing Trend Strength feed. It uses a predeclared 20-day daily return and 120-bar 4-hour return, requires completed contiguous candles, produces a combined -2 to +2 component score, and persists daily/4H states plus explicit quality metadata. The daily state is the regime anchor; 4H is confirmation/conflict context. It does not increase the analyzer maximum beyond 20 or create an additional independent vote.
+
+The next work should use fresh persisted analyzer cycles to calibrate thresholds, not add more indicators immediately. We should inspect the distribution of the two momentum returns, ATR momentum, ADX, RSI/MACD signals, OI/funding states, unavailable feeds, and sentiment transitions over several days before changing weights or thresholds.

@@ -7,7 +7,7 @@
   const dateText = (value) => { if (!value) return "—"; const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString(); };
   const shortDate = (value) => { if (!value) return "—"; const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString([], {month:"short", day:"numeric", hour:"numeric"}); };
   const groupLabel = (value) => String(value ?? "").replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-  const indicatorLabel = (value) => ({macd_divergence:"MACD Momentum", rsi_divergence:"RSI Divergence", fear_greed:"Fear & Greed", open_interest:"Open Interest", funding_rate:"Funding Rate", dollar_strength:"Dollar Strength", volume_profile:"Volume Profile", trend_strength:"Trend Strength", structure_break:"Structure Break", whale_activity:"Whale Activity", bollinger_bands:"Bollinger Bands", volume:"Volume (context only)"}[value] || groupLabel(value));
+  const indicatorLabel = (value) => ({macd_divergence:"MACD Momentum", rsi_divergence:"RSI Divergence", fear_greed:"Fear & Greed", open_interest:"Open Interest", funding_rate:"Funding Rate", dollar_strength:"Dollar Strength", volume_profile:"Volume Profile", trend_strength:"Trend / TSMOM", structure_break:"Structure Break", whale_activity:"Whale Activity", bollinger_bands:"Bollinger Bands", volume:"Volume (context only)"}[value] || groupLabel(value));
 
   function renderOverview(payload) {
     const latest = payload.latest;
@@ -99,6 +99,18 @@
     $("#trend-stats").innerHTML = [["Direction", trend.direction || "—"], ["Average", signed(trend.average_score)], ["High", signed(trend.high_score)], ["Low", signed(trend.low_score)], ["Positive", trend.positive_points ?? "—"], ["Negative", trend.negative_points ?? "—"]].map(([label, value]) => `<div class="trend-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
   }
 
+  function renderMomentum(momentum = {}) {
+    const daily = momentum.daily || {};
+    const fourHour = momentum.four_hour || {};
+    const quality = momentum.quality || {};
+    const score = Number(momentum.score) || 0;
+    const state = String(momentum.state || "unavailable");
+    const returnText = (item) => item.return_pct === null || item.return_pct === undefined ? "—" : signed(Number(item.return_pct).toFixed(2)) + "%";
+    $("#momentum-quality").textContent = quality.status === "available" ? `Available · ${state}` : `Unavailable · ${quality.reason || "insufficient history"}`;
+    $("#momentum-stats").innerHTML = [["Combined", signed(score) + " / 2"], ["Daily", `${groupLabel(daily.state)} · ${returnText(daily)}`], ["4H confirmation", `${groupLabel(fourHour.state)} · ${returnText(fourHour)}`], ["Policy", "Completed bars only"], ["Version", quality.parameter_version || "tsmom-v1"], ["Meaning", score === 0 ? "Mixed / conflict" : score > 0 ? "Constructive" : "Adverse"]].map(([label, value]) => `<div class="trend-stat"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+    $("#momentum-summary").textContent = quality.status === "available" ? `Daily is the anchor; 4H ${state === "mixed" ? "conflicts with or does not confirm the slower trend" : "provides confirmation context"}. This is spot-market regime context, not a trade trigger.` : `Momentum is unavailable until both completed lookback windows are valid. ${quality.reason || "No value is imputed."}`;
+  }
+
   function renderIndicators(groups, quality = {}) {
     const container = $("#indicator-groups");
     const count = groups.reduce((total, group) => total + (group.indicators || []).length, 0);
@@ -127,7 +139,7 @@
       const response = await fetch(`/api/dashboard?ts=${Date.now()}`, {cache: "no-store"});
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
-      renderOverview(payload); renderChart(payload.candles || [], payload.history || []); renderAnalytics(payload.analytics || {}); renderIndicators(payload.latest?.indicators || [], payload.latest?.data_quality || {}); renderSpotGuidance(payload.spot_guidance || {});
+      renderOverview(payload); renderChart(payload.candles || [], payload.history || []); renderAnalytics(payload.analytics || {}); renderMomentum(payload.time_series_momentum || {}); renderIndicators(payload.latest?.indicators || [], payload.latest?.data_quality || {}); renderSpotGuidance(payload.spot_guidance || {});
       $("#connection-status").textContent = "Live"; $(".live-dot").className = "live-dot live"; $("#data-status").textContent = `Loaded ${payload.meta.history_count || 0} persisted point${payload.meta.history_count === 1 ? "" : "s"}`; $("#updated").textContent = `Updated ${dateText(payload.meta.refreshed_at)}`;
     } catch (error) { $("#connection-status").textContent = "Unavailable"; $(".live-dot").className = "live-dot error"; $("#data-status").textContent = `Dashboard error: ${error.message}`; }
   }

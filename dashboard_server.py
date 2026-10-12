@@ -173,6 +173,21 @@ def _spot_guidance(latest: dict[str, Any] | None, candles: list[dict[str, Any]])
     }
 
 
+def _momentum_summary(latest: dict[str, Any] | None) -> dict[str, Any]:
+    latest = latest if isinstance(latest, dict) else {}
+    metrics = latest.get("metrics", {}) if isinstance(latest.get("metrics"), dict) else {}
+    trend = metrics.get("trend", {}) if isinstance(metrics.get("trend"), dict) else {}
+    momentum = trend.get("time_series_momentum", {}) if isinstance(trend.get("time_series_momentum"), dict) else {}
+    horizons = momentum.get("horizons", {}) if isinstance(momentum.get("horizons"), dict) else {}
+    return {
+        "score": _number(momentum.get("score")),
+        "state": momentum.get("state", "unavailable"),
+        "quality": momentum.get("quality", {"status": "unavailable"}),
+        "daily": horizons.get("daily", {"state": "unavailable"}),
+        "four_hour": horizons.get("four_hour", {"state": "unavailable"}),
+    }
+
+
 def _slot_from_ms(value: Any, daily: bool = False) -> str | None:
     try:
         stamp = datetime.fromtimestamp(int(value) / 1000, tz=timezone.utc)
@@ -346,7 +361,7 @@ def dashboard_payload() -> dict[str, Any]:
             "timestamp": state.get("timestamp"),
             "slot_utc": state.get("slot_utc"),
             "score": state.get("score"),
-            "max_score": state.get("max_score", 24),
+            "max_score": state.get("max_score", 20),
             "sentiment": state.get("sentiment", "CONSOLIDATION"),
             "regime": state.get("regime", "orange"),
             "indicators": _indicator_groups(state.get("indicators")),
@@ -362,6 +377,7 @@ def dashboard_payload() -> dict[str, Any]:
         "candles": candles,
         "signals": signals[-20:],
         "spot_guidance": _spot_guidance(latest, candles),
+        "time_series_momentum": _momentum_summary(latest),
         "analytics": {
             "volume_breakdown": _volume_breakdown(state.get("metrics", {})),
             "historical_trend": _historical_trend(history),

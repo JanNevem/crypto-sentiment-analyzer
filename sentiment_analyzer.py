@@ -64,6 +64,67 @@ class SentimentAnalyzer:
         if not isinstance(payload, list) or len(payload) < 2 or any(not isinstance(row, list) or len(row) < 8 for row in payload):
             raise ValueError(f'Binance returned an invalid {interval} kline payload')
         return payload
+
+    @staticmethod
+    def _closed_klines(interval: str, limit: int) -> list:
+        """Return only completed, valid candles so momentum cannot use a live bar."""
+        rows = SentimentAnalyzer._fetch_klines(interval, limit)
+        now_ms = int(datetime.now().timestamp() * 1000)
+        closed = []
+        for row in rows:
+            try:
+                if int(row[6]) <= now_ms and all(np.isfinite(float(row[index])) for index in (1, 2, 3, 4)):
+                    closed.append(row)
+            except (TypeError, ValueError, IndexError):
+                continue
+        return closed
+
+    def get_time_series_momentum(self) -> Dict:
+        """Calculate a two-horizon, price-only momentum component from completed bars."""
+        horizons = {
+            'daily': {'interval': '1d', 'lookback': 20, 'limit': 60, 'min_return': 0.02},
+            'four_hour': {'interval': '4h', 'lookback': 120, 'limit': 150, 'min_return': 0.015},
+        }
+        result = {'score': 0, 'state': 'unavailable', 'quality': {'status': 'unavailable'}, 'horizons': {}}
+        try:
+            for name, config in horizons.items():
+                rows = self._closed_klines(config['interval'], config['limit'])
+                closes = [float(row[4]) for row in rows]
+                lookback = config['lookback']
+                interval_ms = 86_400_000 if config['interval'] == '1d' else 14_400_000
+                timestamps = [int(row[0]) for row in rows]
+                contiguous = all((right - left) == interval_ms for left, right in zip(timestamps, timestamps[1:]))
+                if len(closes) < lookback + 1 or not contiguous:
+                    result['horizons'][name] = {'state': 'unavailable', 'score': 0, 'return_pct': None, 'bars': len(closes), 'required_bars': lookback + 1}
+                    continue
+                trailing_return = closes[-1] / closes[-1 - lookback] - 1
+                score = 1 if trailing_return >= config['min_return'] else -1 if trailing_return <= -config['min_return'] else 0
+                result['horizons'][name] = {
+                    'state': 'constructive' if score > 0 else 'adverse' if score < 0 else 'neutral',
+                    'score': score,
+                    'return_pct': round(trailing_return * 100, 3),
+                    'bars': len(closes),
+                    'required_bars': lookback + 1,
+                    'interval': config['interval'],
+                    'lookback_bars': lookback,
+                }
+            available = [item for item in result['horizons'].values() if item['state'] != 'unavailable']
+            if len(available) != len(horizons):
+                result['state'] = 'unavailable'
+                result['quality'] = {'status': 'unavailable', 'reason': 'incomplete completed-candle lookback'}
+                return result
+            result['score'] = sum(item['score'] for item in available)
+            result['state'] = 'constructive' if result['score'] > 0 else 'adverse' if result['score'] < 0 else 'mixed'
+            result['quality'] = {
+                'status': 'available',
+                'source': 'Binance BTCUSDT spot OHLCV',
+                'bar_policy': 'completed UTC candles only',
+                'parameter_version': 'tsmom-v1',
+            }
+            return result
+        except Exception as error:
+            result['quality'] = {'status': 'unavailable', 'reason': str(error)}
+            return result
     
     # ==================== EARLY REVERSAL INDICATORS ====================
     # (Leading indicators - predict change)
@@ -199,6 +260,7 @@ class SentimentAnalyzer:
     def get_trend_strength(self) -> Dict:
         """[CONFIRM] Combine ATR-normalized momentum with directional ADX."""
         try:
+            time_series_momentum = self.get_time_series_momentum()
             rows = self._fetch_klines('1d', 100)
             if len(rows) < 35:
                 return {'strength': 5, 'direction': 'Neutral', 'description': 'Insufficient data', 'quality': {'status': 'degraded', 'reason': 'insufficient daily candles'}}
@@ -222,7 +284,7 @@ class SentimentAnalyzer:
             adx_value = float(adx[-1])
             plus_value = float(plus_di[-1])
             minus_value = float(minus_di[-1])
-            direction = 'Up' if plus_value > minus_value and momentum_5d_atr > 0 else 'Down' if minus_value > plus_value and momentum_5d_atr < 0 else 'Neutral'
+            direction = 'Up' if time_series_momentum['score'] > 0 else 'Down' if time_series_momentum['score'] < 0 else 'Neutral'
             strength = 5
             if adx_value >= 25:
                 strength += 2 if direction != 'Neutral' else 0
@@ -244,11 +306,12 @@ class SentimentAnalyzer:
                 'minus_di': round(minus_value, 2),
                 'atr': round(current_atr, 2),
                 'momentum_5d_atr': round(float(momentum_5d_atr), 2),
+                'time_series_momentum': time_series_momentum,
                 'quality': {'status': 'available', 'source': 'Binance BTCUSDT daily OHLCV', 'freshness': 'daily'}
             }
         except Exception as e:
             print(f"Error calculating ATR/ADX trend: {e}")
-            return {'strength': 5, 'direction': 'Neutral', 'description': 'Trend data unavailable', 'quality': {'status': 'unavailable', 'reason': str(e)}}
+            return {'strength': 5, 'direction': 'Neutral', 'description': 'Trend data unavailable', 'time_series_momentum': {'score': 0, 'state': 'unavailable', 'quality': {'status': 'unavailable', 'reason': str(e)}}, 'quality': {'status': 'unavailable', 'reason': str(e)}}
     
     def get_volume_confirmation(self) -> Dict:
         """[CONFIRM] Get volume analysis"""
@@ -435,7 +498,10 @@ class SentimentAnalyzer:
         
         print("[5/10] Trend Strength...")
         trend = self.get_trend_strength()
-        if trend['strength'] >= 8:
+        momentum = trend.get('time_series_momentum', {})
+        if momentum.get('quality', {}).get('status') == 'available':
+            trend_score = int(momentum.get('score', 0))
+        elif trend['strength'] >= 8:
             trend_score = 2
         elif trend['strength'] >= 6:
             trend_score = 1
@@ -445,7 +511,7 @@ class SentimentAnalyzer:
             trend_score = -1
         else:
             trend_score = 0
-        print(f"      Trend: {trend['direction']} ({trend['strength']}/10) -> Score: {trend_score:+d}")
+        print(f"      Trend: {trend['direction']} ({trend['strength']}/10); TSMOM {trend_score:+d} -> Score: {trend_score:+d}")
         
         print("[context] Volume Confirmation (context only)...")
         volume = self.get_volume_confirmation()
@@ -484,6 +550,7 @@ class SentimentAnalyzer:
             'structure_break': {'status': 'available' if structure.get('structure') not in ('Error', 'Insufficient Data') else 'unavailable', 'source': 'Binance BTCUSDT 4H OHLCV'},
             'fear_greed': {'status': 'available', 'source': 'Alternative.me'},
             'trend_strength': trend.get('quality', {'status': 'available', 'source': 'Binance BTCUSDT daily OHLCV'}),
+            'time_series_momentum': momentum.get('quality', {'status': 'unavailable', 'reason': 'not calculated'}),
             'volume_confirmation': {'status': 'available' if volume.get('current_volume', 0) else 'unavailable', 'role': 'context_only'},
             'bollinger_bands': {'status': 'available', 'source': 'Binance BTCUSDT daily OHLCV'},
             'volume_profile': {'status': 'available' if vol_profile.get('current_volume', 0) else 'unavailable', 'source': 'Binance BTCUSDT daily OHLCV'},
