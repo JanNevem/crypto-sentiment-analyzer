@@ -1,6 +1,6 @@
 {
   "slot_utc": "2026-10-20T16:00:00+00:00",
-  "timestamp": "2026-10-20T16:00:13.291335",
+  "timestamp": "2026-10-20T19:53:28.473550",
   "asset": "BTC",
   "score": 0,
   "max_score": 20,
@@ -9931,7 +9931,7 @@
     },
     {
       "slot_utc": "2026-10-20T16:00:00+00:00",
-      "timestamp": "2026-10-20T16:00:13.291335",
+      "timestamp": "2026-10-20T19:53:28.473550",
       "asset": "BTC",
       "score": 0,
       "max_score": 20,
@@ -9964,20 +9964,20 @@
             "volume_trend": "Decreasing",
             "signal": -1,
             "description": "Volume is decreasing - Weak confirmation",
-            "current_volume": 114676.1,
-            "average_volume": 46862563.67
+            "current_volume": 12225793.13,
+            "average_volume": 47054494.51
           },
           "profile": {
             "volume_trend": "OBV Increasing",
-            "current_volume": 900516572.3262599,
-            "avg_volume": 1171225047.274953,
+            "current_volume": 1008332751.926136,
+            "avg_volume": 1176615856.2549467,
             "volume_spike": false,
             "volume_increasing": false,
-            "on_balance_volume": -8419398217.696655,
+            "on_balance_volume": -8311582038.096779,
             "obv_trend": "Increasing",
             "signal": 1,
             "confidence": "Medium",
-            "timestamp": "2026-10-20T16:00:11.885179"
+            "timestamp": "2026-10-20T19:53:27.190363"
           }
         },
         "trend": {
@@ -10028,7 +10028,7 @@
         "open_interest": {
           "trend": "Stable",
           "price_direction": "Up",
-          "change_pct": -1.21,
+          "change_pct": 0.04,
           "score": 0
         },
         "funding": {
@@ -10126,20 +10126,20 @@
         "volume_trend": "Decreasing",
         "signal": -1,
         "description": "Volume is decreasing - Weak confirmation",
-        "current_volume": 114676.1,
-        "average_volume": 46862563.67
+        "current_volume": 12225793.13,
+        "average_volume": 47054494.51
       },
       "profile": {
         "volume_trend": "OBV Increasing",
-        "current_volume": 900516572.3262599,
-        "avg_volume": 1171225047.274953,
+        "current_volume": 1008332751.926136,
+        "avg_volume": 1176615856.2549467,
         "volume_spike": false,
         "volume_increasing": false,
-        "on_balance_volume": -8419398217.696655,
+        "on_balance_volume": -8311582038.096779,
         "obv_trend": "Increasing",
         "signal": 1,
         "confidence": "Medium",
-        "timestamp": "2026-10-20T16:00:11.885179"
+        "timestamp": "2026-10-20T19:53:27.190363"
       }
     },
     "trend": {
@@ -10190,7 +10190,7 @@
     "open_interest": {
       "trend": "Stable",
       "price_direction": "Up",
-      "change_pct": -1.21,
+      "change_pct": 0.04,
       "score": 0
     },
     "funding": {
