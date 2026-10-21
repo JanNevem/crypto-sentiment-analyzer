@@ -1,8 +1,8 @@
 {
   "slot_utc": "2026-10-21T20:00:00+00:00",
-  "timestamp": "2026-10-21T20:07:02.521200",
+  "timestamp": "2026-10-21T23:15:47.085206",
   "asset": "BTC",
-  "score": 2,
+  "score": 3,
   "max_score": 20,
   "sentiment": "CONSOLIDATION",
   "regime": "orange",
@@ -10945,9 +10945,9 @@
     },
     {
       "slot_utc": "2026-10-21T20:00:00+00:00",
-      "timestamp": "2026-10-21T20:07:02.521200",
+      "timestamp": "2026-10-21T23:15:47.085206",
       "asset": "BTC",
-      "score": 2,
+      "score": 3,
       "max_score": 20,
       "sentiment": "CONSOLIDATION",
       "regime": "orange",
@@ -10956,8 +10956,8 @@
           "rsi_divergence": 0,
           "macd_divergence": 0,
           "whale_activity": 0,
-          "structure_break": 0,
-          "total": 0
+          "structure_break": 1,
+          "total": 1
         },
         "confirmatory": {
           "fear_greed": 1,
@@ -10978,31 +10978,31 @@
             "volume_trend": "Decreasing",
             "signal": -1,
             "description": "Volume is decreasing - Weak confirmation",
-            "current_volume": 7223227.4,
-            "average_volume": 57070319.74
+            "current_volume": 8614411.7,
+            "average_volume": 58131948.67
           },
           "profile": {
             "volume_trend": "Increasing Volume (Up)",
-            "current_volume": 1209968180.9789574,
-            "avg_volume": 1173581744.1423457,
+            "current_volume": 1345655345.7751598,
+            "avg_volume": 1180366102.3821557,
             "volume_spike": false,
             "volume_increasing": true,
-            "on_balance_volume": -5128742748.725639,
+            "on_balance_volume": -4993055583.929437,
             "obv_trend": "Increasing",
             "signal": 1,
             "confidence": "Medium",
-            "timestamp": "2026-10-21T20:07:01.616799"
+            "timestamp": "2026-10-21T23:15:46.050767"
           }
         },
         "trend": {
           "strength": 5,
           "direction": "Neutral",
-          "description": "ADX 19.5; +DI 22.1; -DI 17.9; momentum 1.41 ATR",
+          "description": "ADX 19.5; +DI 22.1; -DI 17.9; momentum 1.33 ATR",
           "adx": 19.47,
           "plus_di": 22.15,
           "minus_di": 17.92,
           "atr": 2093.04,
-          "momentum_5d_atr": 1.41,
+          "momentum_5d_atr": 1.33,
           "time_series_momentum": {
             "score": 0,
             "state": "mixed",
@@ -11041,8 +11041,8 @@
         },
         "open_interest": {
           "trend": "Stable",
-          "price_direction": "Up",
-          "change_pct": -0.83,
+          "price_direction": "Down",
+          "change_pct": 0.11,
           "score": 0
         },
         "funding": {
@@ -11118,8 +11118,8 @@
       "rsi_divergence": 0,
       "macd_divergence": 0,
       "whale_activity": 0,
-      "structure_break": 0,
-      "total": 0
+      "structure_break": 1,
+      "total": 1
     },
     "confirmatory": {
       "fear_greed": 1,
@@ -11140,31 +11140,31 @@
         "volume_trend": "Decreasing",
         "signal": -1,
         "description": "Volume is decreasing - Weak confirmation",
-        "current_volume": 7223227.4,
-        "average_volume": 57070319.74
+        "current_volume": 8614411.7,
+        "average_volume": 58131948.67
       },
       "profile": {
         "volume_trend": "Increasing Volume (Up)",
-        "current_volume": 1209968180.9789574,
-        "avg_volume": 1173581744.1423457,
+        "current_volume": 1345655345.7751598,
+        "avg_volume": 1180366102.3821557,
         "volume_spike": false,
         "volume_increasing": true,
-        "on_balance_volume": -5128742748.725639,
+        "on_balance_volume": -4993055583.929437,
         "obv_trend": "Increasing",
         "signal": 1,
         "confidence": "Medium",
-        "timestamp": "2026-10-21T20:07:01.616799"
+        "timestamp": "2026-10-21T23:15:46.050767"
       }
     },
     "trend": {
       "strength": 5,
       "direction": "Neutral",
-      "description": "ADX 19.5; +DI 22.1; -DI 17.9; momentum 1.41 ATR",
+      "description": "ADX 19.5; +DI 22.1; -DI 17.9; momentum 1.33 ATR",
       "adx": 19.47,
       "plus_di": 22.15,
       "minus_di": 17.92,
       "atr": 2093.04,
-      "momentum_5d_atr": 1.41,
+      "momentum_5d_atr": 1.33,
       "time_series_momentum": {
         "score": 0,
         "state": "mixed",
@@ -11203,8 +11203,8 @@
     },
     "open_interest": {
       "trend": "Stable",
-      "price_direction": "Up",
-      "change_pct": -0.83,
+      "price_direction": "Down",
+      "change_pct": 0.11,
       "score": 0
     },
     "funding": {
