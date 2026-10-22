@@ -1,6 +1,6 @@
 {
   "slot_utc": "2026-10-22T20:00:00+00:00",
-  "timestamp": "2026-10-22T20:40:18.087790",
+  "timestamp": "2026-10-22T23:35:51.574742",
   "asset": "BTC",
   "score": -4,
   "max_score": 20,
@@ -11790,7 +11790,7 @@
     },
     {
       "slot_utc": "2026-10-22T20:00:00+00:00",
-      "timestamp": "2026-10-22T20:40:18.087790",
+      "timestamp": "2026-10-22T23:35:51.574742",
       "asset": "BTC",
       "score": -4,
       "max_score": 20,
@@ -11823,31 +11823,31 @@
             "volume_trend": "Decreasing",
             "signal": -1,
             "description": "Volume is decreasing - Weak confirmation",
-            "current_volume": 12835158.97,
-            "average_volume": 71185720.81
+            "current_volume": 14769097.1,
+            "average_volume": 68527041.72
           },
           "profile": {
             "volume_trend": "Increasing Volume (Down)",
-            "current_volume": 1515791582.5108507,
-            "avg_volume": 1144898407.846661,
+            "current_volume": 1590891056.6406558,
+            "avg_volume": 1148653381.5531514,
             "volume_spike": false,
             "volume_increasing": true,
-            "on_balance_volume": -4578023897.235532,
+            "on_balance_volume": -4653123371.365336,
             "obv_trend": "Decreasing",
             "signal": -1,
             "confidence": "Medium",
-            "timestamp": "2026-10-22T20:40:16.737218"
+            "timestamp": "2026-10-22T23:35:49.874375"
           }
         },
         "trend": {
           "strength": 4,
           "direction": "Down",
-          "description": "ADX 18.4; +DI 19.7; -DI 21.5; momentum -0.07 ATR",
+          "description": "ADX 18.4; +DI 19.7; -DI 21.5; momentum -0.08 ATR",
           "adx": 18.4,
           "plus_di": 19.67,
           "minus_di": 21.45,
           "atr": 2188.05,
-          "momentum_5d_atr": -0.07,
+          "momentum_5d_atr": -0.08,
           "time_series_momentum": {
             "score": -1,
             "state": "adverse",
@@ -11887,7 +11887,7 @@
         "open_interest": {
           "trend": "Stable",
           "price_direction": "Down",
-          "change_pct": 0.56,
+          "change_pct": 0.26,
           "score": 0
         },
         "funding": {
@@ -11985,31 +11985,31 @@
         "volume_trend": "Decreasing",
         "signal": -1,
         "description": "Volume is decreasing - Weak confirmation",
-        "current_volume": 12835158.97,
-        "average_volume": 71185720.81
+        "current_volume": 14769097.1,
+        "average_volume": 68527041.72
       },
       "profile": {
         "volume_trend": "Increasing Volume (Down)",
-        "current_volume": 1515791582.5108507,
-        "avg_volume": 1144898407.846661,
+        "current_volume": 1590891056.6406558,
+        "avg_volume": 1148653381.5531514,
         "volume_spike": false,
         "volume_increasing": true,
-        "on_balance_volume": -4578023897.235532,
+        "on_balance_volume": -4653123371.365336,
         "obv_trend": "Decreasing",
         "signal": -1,
         "confidence": "Medium",
-        "timestamp": "2026-10-22T20:40:16.737218"
+        "timestamp": "2026-10-22T23:35:49.874375"
       }
     },
     "trend": {
       "strength": 4,
       "direction": "Down",
-      "description": "ADX 18.4; +DI 19.7; -DI 21.5; momentum -0.07 ATR",
+      "description": "ADX 18.4; +DI 19.7; -DI 21.5; momentum -0.08 ATR",
       "adx": 18.4,
       "plus_di": 19.67,
       "minus_di": 21.45,
       "atr": 2188.05,
-      "momentum_5d_atr": -0.07,
+      "momentum_5d_atr": -0.08,
       "time_series_momentum": {
         "score": -1,
         "state": "adverse",
@@ -12049,7 +12049,7 @@
     "open_interest": {
       "trend": "Stable",
       "price_direction": "Down",
-      "change_pct": 0.56,
+      "change_pct": 0.26,
       "score": 0
     },
     "funding": {
