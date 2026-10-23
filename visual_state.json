@@ -1,8 +1,8 @@
 {
   "slot_utc": "2026-10-23T20:00:00+00:00",
-  "timestamp": "2026-10-23T20:32:58.330013",
+  "timestamp": "2026-10-23T23:29:32.381212",
   "asset": "BTC",
-  "score": -3,
+  "score": -5,
   "max_score": 20,
   "sentiment": "CONSOLIDATION",
   "regime": "orange",
@@ -12635,9 +12635,9 @@
     },
     {
       "slot_utc": "2026-10-23T20:00:00+00:00",
-      "timestamp": "2026-10-23T20:32:58.330013",
+      "timestamp": "2026-10-23T23:29:32.381212",
       "asset": "BTC",
-      "score": -3,
+      "score": -5,
       "max_score": 20,
       "sentiment": "CONSOLIDATION",
       "regime": "orange",
@@ -12654,45 +12654,45 @@
           "trend_strength": -2,
           "volume": 0,
           "bollinger_bands": 0,
-          "volume_profile": 1,
+          "volume_profile": -1,
           "open_interest": 0,
           "funding_rate": 0,
           "dollar_strength": 0,
-          "total": -1
+          "total": -3
         }
       },
       "metrics": {
         "volume": {
           "confirmation": {
-            "confirming": false,
-            "volume_trend": "Decreasing",
-            "signal": -1,
-            "description": "Volume is decreasing - Weak confirmation",
-            "current_volume": 13382032.28,
-            "average_volume": 39795638.31
+            "confirming": true,
+            "volume_trend": "Stable",
+            "signal": 0,
+            "description": "Volume is stable - Confirming trend",
+            "current_volume": 35475651.81,
+            "average_volume": 41959942.31
           },
           "profile": {
-            "volume_trend": "OBV Increasing",
-            "current_volume": 854483251.45054,
-            "avg_volume": 1162689688.435002,
+            "volume_trend": "OBV Decreasing",
+            "current_volume": 1000579554.2865942,
+            "avg_volume": 1169994503.5768049,
             "volume_spike": false,
             "volume_increasing": false,
-            "on_balance_volume": -5380703363.083335,
-            "obv_trend": "Increasing",
-            "signal": 1,
+            "on_balance_volume": -7235766168.820469,
+            "obv_trend": "Decreasing",
+            "signal": -1,
             "confidence": "Medium",
-            "timestamp": "2026-10-23T20:32:56.923917"
+            "timestamp": "2026-10-23T23:29:31.032145"
           }
         },
         "trend": {
           "strength": 5,
           "direction": "Down",
-          "description": "ADX 17.4; +DI 19.0; -DI 20.7; momentum -0.33 ATR",
-          "adx": 17.39,
-          "plus_di": 19.03,
-          "minus_di": 20.75,
-          "atr": 2100.54,
-          "momentum_5d_atr": -0.33,
+          "description": "ADX 17.6; +DI 18.7; -DI 21.8; momentum -0.53 ATR",
+          "adx": 17.63,
+          "plus_di": 18.66,
+          "minus_di": 21.77,
+          "atr": 2142.4,
+          "momentum_5d_atr": -0.53,
           "time_series_momentum": {
             "score": -2,
             "state": "adverse",
@@ -12731,8 +12731,8 @@
         },
         "open_interest": {
           "trend": "Stable",
-          "price_direction": "Up",
-          "change_pct": 0.4,
+          "price_direction": "Down",
+          "change_pct": 0.67,
           "score": 0
         },
         "funding": {
@@ -12816,45 +12816,45 @@
       "trend_strength": -2,
       "volume": 0,
       "bollinger_bands": 0,
-      "volume_profile": 1,
+      "volume_profile": -1,
       "open_interest": 0,
       "funding_rate": 0,
       "dollar_strength": 0,
-      "total": -1
+      "total": -3
     }
   },
   "metrics": {
     "volume": {
       "confirmation": {
-        "confirming": false,
-        "volume_trend": "Decreasing",
-        "signal": -1,
-        "description": "Volume is decreasing - Weak confirmation",
-        "current_volume": 13382032.28,
-        "average_volume": 39795638.31
+        "confirming": true,
+        "volume_trend": "Stable",
+        "signal": 0,
+        "description": "Volume is stable - Confirming trend",
+        "current_volume": 35475651.81,
+        "average_volume": 41959942.31
       },
       "profile": {
-        "volume_trend": "OBV Increasing",
-        "current_volume": 854483251.45054,
-        "avg_volume": 1162689688.435002,
+        "volume_trend": "OBV Decreasing",
+        "current_volume": 1000579554.2865942,
+        "avg_volume": 1169994503.5768049,
         "volume_spike": false,
         "volume_increasing": false,
-        "on_balance_volume": -5380703363.083335,
-        "obv_trend": "Increasing",
-        "signal": 1,
+        "on_balance_volume": -7235766168.820469,
+        "obv_trend": "Decreasing",
+        "signal": -1,
         "confidence": "Medium",
-        "timestamp": "2026-10-23T20:32:56.923917"
+        "timestamp": "2026-10-23T23:29:31.032145"
       }
     },
     "trend": {
       "strength": 5,
       "direction": "Down",
-      "description": "ADX 17.4; +DI 19.0; -DI 20.7; momentum -0.33 ATR",
-      "adx": 17.39,
-      "plus_di": 19.03,
-      "minus_di": 20.75,
-      "atr": 2100.54,
-      "momentum_5d_atr": -0.33,
+      "description": "ADX 17.6; +DI 18.7; -DI 21.8; momentum -0.53 ATR",
+      "adx": 17.63,
+      "plus_di": 18.66,
+      "minus_di": 21.77,
+      "atr": 2142.4,
+      "momentum_5d_atr": -0.53,
       "time_series_momentum": {
         "score": -2,
         "state": "adverse",
@@ -12893,8 +12893,8 @@
     },
     "open_interest": {
       "trend": "Stable",
-      "price_direction": "Up",
-      "change_pct": 0.4,
+      "price_direction": "Down",
+      "change_pct": 0.67,
       "score": 0
     },
     "funding": {
