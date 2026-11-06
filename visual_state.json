@@ -1,11 +1,11 @@
 {
-  "slot_utc": "2026-11-06T16:00:00+00:00",
-  "timestamp": "2026-11-06T18:13:34.039299",
+  "slot_utc": "2026-11-06T20:00:00+00:00",
+  "timestamp": "2026-11-06T23:07:19.796580",
   "asset": "BTC",
-  "score": -8,
+  "score": -7,
   "max_score": 20,
-  "sentiment": "CONSOLIDATION",
-  "regime": "orange",
+  "sentiment": "BEARISH",
+  "regime": "red",
   "history": [
     {
       "slot_utc": "2026-10-08T08:00:00+00:00",
@@ -23705,6 +23705,183 @@
       "signal": null,
       "changed": false,
       "previous_sentiment": "CONSOLIDATION"
+    },
+    {
+      "slot_utc": "2026-11-06T20:00:00+00:00",
+      "timestamp": "2026-11-06T23:07:19.796580",
+      "asset": "BTC",
+      "score": -7,
+      "max_score": 20,
+      "sentiment": "BEARISH",
+      "regime": "red",
+      "indicators": {
+        "early_reversal": {
+          "rsi_divergence": 0,
+          "macd_divergence": -2,
+          "whale_activity": 0,
+          "structure_break": 0,
+          "total": -2
+        },
+        "confirmatory": {
+          "fear_greed": -1,
+          "trend_strength": -2,
+          "volume": 0,
+          "bollinger_bands": 0,
+          "volume_profile": -1,
+          "open_interest": 0,
+          "funding_rate": 0,
+          "dollar_strength": -1,
+          "total": -5
+        }
+      },
+      "metrics": {
+        "volume": {
+          "confirmation": {
+            "confirming": false,
+            "volume_trend": "Decreasing",
+            "signal": -1,
+            "description": "Volume is decreasing - Weak confirmation",
+            "current_volume": 1551738.4,
+            "average_volume": 54707570.62
+          },
+          "profile": {
+            "volume_trend": "Increasing Volume (Down)",
+            "current_volume": 1259826659.9238105,
+            "avg_volume": 1180188439.7805352,
+            "volume_spike": false,
+            "volume_increasing": true,
+            "on_balance_volume": -4348866860.196857,
+            "obv_trend": "Decreasing",
+            "signal": -1,
+            "confidence": "Medium",
+            "timestamp": "2026-11-06T23:07:18.386285"
+          }
+        },
+        "trend": {
+          "strength": 3,
+          "direction": "Down",
+          "description": "ADX 20.2; +DI 16.8; -DI 21.0; momentum -1.02 ATR",
+          "adx": 20.24,
+          "plus_di": 16.77,
+          "minus_di": 20.96,
+          "atr": 2385.23,
+          "momentum_5d_atr": -1.02,
+          "time_series_momentum": {
+            "score": -2,
+            "state": "adverse",
+            "quality": {
+              "status": "available",
+              "source": "Binance BTCUSDT spot OHLCV",
+              "bar_policy": "completed UTC candles only",
+              "parameter_version": "tsmom-v1"
+            },
+            "horizons": {
+              "daily": {
+                "state": "adverse",
+                "score": -1,
+                "return_pct": -6.773,
+                "bars": 59,
+                "required_bars": 21,
+                "interval": "1d",
+                "lookback_bars": 20
+              },
+              "four_hour": {
+                "state": "adverse",
+                "score": -1,
+                "return_pct": -7.0,
+                "bars": 149,
+                "required_bars": 121,
+                "interval": "4h",
+                "lookback_bars": 120
+              }
+            }
+          },
+          "quality": {
+            "status": "available",
+            "source": "Binance BTCUSDT daily OHLCV",
+            "freshness": "daily"
+          }
+        },
+        "open_interest": {
+          "trend": "Stable",
+          "price_direction": "Up",
+          "change_pct": -0.63,
+          "score": 0
+        },
+        "funding": {
+          "state": "Neutral",
+          "rate": 9.043e-05,
+          "score": 0
+        }
+      },
+      "data_quality": {
+        "rsi_divergence": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV"
+        },
+        "macd_momentum": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV"
+        },
+        "whale_activity": {
+          "status": "unavailable",
+          "source": "No configured on-chain provider"
+        },
+        "structure_break": {
+          "status": "available",
+          "source": "Binance BTCUSDT 4H OHLCV"
+        },
+        "fear_greed": {
+          "status": "available",
+          "source": "Alternative.me"
+        },
+        "trend_strength": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV",
+          "freshness": "daily"
+        },
+        "time_series_momentum": {
+          "status": "available",
+          "source": "Binance BTCUSDT spot OHLCV",
+          "bar_policy": "completed UTC candles only",
+          "parameter_version": "tsmom-v1"
+        },
+        "volume_confirmation": {
+          "status": "available",
+          "role": "context_only"
+        },
+        "bollinger_bands": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV"
+        },
+        "volume_profile": {
+          "status": "available",
+          "source": "Binance BTCUSDT daily OHLCV"
+        },
+        "open_interest": {
+          "status": "available",
+          "source": "Binance Futures + 4H price context"
+        },
+        "funding_rate": {
+          "status": "available",
+          "source": "Binance Futures"
+        },
+        "dollar_strength": {
+          "status": "available",
+          "source": "Federal Reserve FRED DTWEXBGS"
+        }
+      },
+      "signal": {
+        "timestamp": "2026-11-06T23:07:19.796584",
+        "type": "Scout Exit",
+        "direction": "SELL",
+        "sentiment": "BEARISH",
+        "score": -7,
+        "size": "5-10%",
+        "previous_sentiment": "CONSOLIDATION"
+      },
+      "changed": true,
+      "previous_sentiment": "CONSOLIDATION"
     }
   ],
   "indicators": {
@@ -23712,8 +23889,8 @@
       "rsi_divergence": 0,
       "macd_divergence": -2,
       "whale_activity": 0,
-      "structure_break": -1,
-      "total": -3
+      "structure_break": 0,
+      "total": -2
     },
     "confirmatory": {
       "fear_greed": -1,
@@ -23734,31 +23911,31 @@
         "volume_trend": "Decreasing",
         "signal": -1,
         "description": "Volume is decreasing - Weak confirmation",
-        "current_volume": 6017801.84,
-        "average_volume": 60971116.19
+        "current_volume": 1551738.4,
+        "average_volume": 54707570.62
       },
       "profile": {
-        "volume_trend": "OBV Decreasing",
-        "current_volume": 1067543759.2956378,
-        "avg_volume": 1170574294.7491267,
+        "volume_trend": "Increasing Volume (Down)",
+        "current_volume": 1259826659.9238105,
+        "avg_volume": 1180188439.7805352,
         "volume_spike": false,
-        "volume_increasing": false,
-        "on_balance_volume": -4156583959.5686855,
+        "volume_increasing": true,
+        "on_balance_volume": -4348866860.196857,
         "obv_trend": "Decreasing",
         "signal": -1,
         "confidence": "Medium",
-        "timestamp": "2026-11-06T18:13:32.652605"
+        "timestamp": "2026-11-06T23:07:18.386285"
       }
     },
     "trend": {
       "strength": 3,
       "direction": "Down",
-      "description": "ADX 20.2; +DI 16.8; -DI 21.0; momentum -1.08 ATR",
+      "description": "ADX 20.2; +DI 16.8; -DI 21.0; momentum -1.02 ATR",
       "adx": 20.24,
       "plus_di": 16.77,
       "minus_di": 20.96,
       "atr": 2385.23,
-      "momentum_5d_atr": -1.08,
+      "momentum_5d_atr": -1.02,
       "time_series_momentum": {
         "score": -2,
         "state": "adverse",
@@ -23781,7 +23958,7 @@
           "four_hour": {
             "state": "adverse",
             "score": -1,
-            "return_pct": -6.747,
+            "return_pct": -7.0,
             "bars": 149,
             "required_bars": 121,
             "interval": "4h",
@@ -23797,8 +23974,8 @@
     },
     "open_interest": {
       "trend": "Stable",
-      "price_direction": "Down",
-      "change_pct": 1.75,
+      "price_direction": "Up",
+      "change_pct": -0.63,
       "score": 0
     },
     "funding": {
@@ -23807,8 +23984,16 @@
       "score": 0
     }
   },
-  "signal": null,
-  "changed": false,
+  "signal": {
+    "timestamp": "2026-11-06T23:07:19.796584",
+    "type": "Scout Exit",
+    "direction": "SELL",
+    "sentiment": "BEARISH",
+    "score": -7,
+    "size": "5-10%",
+    "previous_sentiment": "CONSOLIDATION"
+  },
+  "changed": true,
   "previous_sentiment": "CONSOLIDATION",
   "data_quality": {
     "rsi_divergence": {
