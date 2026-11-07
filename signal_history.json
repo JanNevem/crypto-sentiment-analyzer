@@ -232,5 +232,14 @@
     "score": -7,
     "size": "5-10%",
     "previous_sentiment": "CONSOLIDATION"
+  },
+  {
+    "timestamp": "2026-11-07T15:48:21.090071",
+    "type": "Scout Exit",
+    "direction": "SELL",
+    "sentiment": "BEARISH",
+    "score": -7,
+    "size": "5-10%",
+    "previous_sentiment": "CONSOLIDATION"
   }
 ]
