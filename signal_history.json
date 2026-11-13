@@ -340,5 +340,14 @@
     "score": -7,
     "size": "5-10%",
     "previous_sentiment": "CONSOLIDATION"
+  },
+  {
+    "timestamp": "2026-11-13T04:00:41.581764",
+    "type": "Core Exit",
+    "direction": "SELL",
+    "sentiment": "BEARISH",
+    "score": -10,
+    "size": "30-40%",
+    "previous_sentiment": "BEARISH"
   }
 ]
