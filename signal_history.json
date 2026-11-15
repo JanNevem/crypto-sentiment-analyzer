@@ -421,5 +421,14 @@
     "score": -10,
     "size": "30-40%",
     "previous_sentiment": "BEARISH"
+  },
+  {
+    "timestamp": "2026-11-15T09:40:17.069716",
+    "type": "Core Exit",
+    "direction": "SELL",
+    "sentiment": "BEARISH",
+    "score": -9,
+    "size": "30-40%",
+    "previous_sentiment": "BEARISH"
   }
 ]
